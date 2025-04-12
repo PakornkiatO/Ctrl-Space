@@ -8,6 +8,8 @@ connectDB();
 
 const app = express();
 
+app.use(express.json());
+
 app.use('/api/v1/coworkings', require('./routes/coworkings.js'));
 
 const PORT = process.env.PORT;

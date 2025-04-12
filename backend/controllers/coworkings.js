@@ -1,5 +1,14 @@
-exports.getCoworkings = (req, res) => {
-    res.status(200).json({success: true, msg: `Show all Co-Working spaces`});
+const Coworking = require('../models/Coworking')
+
+exports.getCoworkings = async (req, res) => {
+    // res.status(200).json({success: true, msg: `Show all Co-Working spaces`});
+    try {
+        const coworkings = await Coworking.find();
+
+        res.status(200).json({success: true, data: coworkings});
+    } catch (error) {
+        res.status(400).json({success: false, msg: error});
+    }
 }
 
 exports.getCoworking = (req, res) => {
