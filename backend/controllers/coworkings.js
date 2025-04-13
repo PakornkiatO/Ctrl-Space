@@ -15,8 +15,11 @@ exports.getCoworking = (req, res) => {
     res.status(200).json({success: true, msg: `Show Co-Working space ID:${req.params.id}`});
 }
 
-exports.createCoworking = (req, res) => {
-    res.status(200).json({success: true, msg: `Creat new Co-Working spaces`});
+exports.createCoworking = async (req, res) => {
+    // res.status(200).json({success: true, msg: `Creat new Co-Working spaces`});
+    const coworking = await Coworking.create(req.body);
+
+    res.status(200).json({success: true, data: coworking});
 }
 
 exports.updateCoworking = (req, res) => {
