@@ -11,6 +11,7 @@ const app = express();
 app.use(express.json());
 
 app.use('/api/v1/coworkings', require('./routes/coworkings.js'));
+app.use('/api/v1/auth', require('./routes/auth.js'));
 
 const PORT = process.env.PORT;
 const server = app.listen(PORT, console.log('Server running in ', process.env.NODE_ENV, ' on port ', PORT));
