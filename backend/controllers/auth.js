@@ -12,9 +12,10 @@ exports.register = async (req, res, next) => {
             role
         });
 
-        const token = user.getSignedJwtToken();
+        // const token = user.getSignedJwtToken();
 
-        res.status(200).json({success: true, data: user, token: token});
+        // res.status(200).json({success: true, data: user, token: token});
+        sendTokenResponse(user, 200, res);
     }
     catch(err){
         res.status(400).json({success: false});
@@ -35,7 +36,21 @@ exports.login = async (req, res, next) => {
 
     if(!isMatch) return res.status(401).json({success: false, msg: 'Invalid credentials'});
 
+    // const token = user.getSignedJwtToken();
+
+    // res.status(200).json({success: true, token: token});
+    sendTokenResponse(user, 200, res);
+}
+
+const sendTokenResponse = (user, statusCode, res) => {
     const token = user.getSignedJwtToken();
 
-    res.status(200).json({success: true, token: token});
+    const options = {
+        expire: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRE*24*60*60),
+        httpOnly: true
+    };
+
+    if(process.env.NODE_ENV === 'production') options.secure = true;
+
+    res.status(statusCode).cookie('token', token, options).json({success: true, token: token});
 }
