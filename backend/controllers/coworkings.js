@@ -3,9 +3,33 @@ const Coworking = require('../models/Coworking')
 exports.getCoworkings = async (req, res) => {
     // res.status(200).json({success: true, msg: `Show all Co-Working spaces`});
     try {
-        const coworkings = await Coworking.find();
+        // const coworkings = await Coworking.find(req.query);
+    
+        let query;
 
-        res.status(200).json({success: true, data: coworkings});
+        const reqQuery = {...req.query};
+        const removeFields = ['select', 'sort'];
+        removeFields.forEach(params => delete reqQuery[params]);
+
+        let queryStr = JSON.stringify(req.query);
+        queryStr = queryStr.replace(/\b(gt| gte| lt| lte| in)\b/g, match => `$${match}`);
+
+        query = Coworking.find(JSON.parse(queryStr));
+
+        if(req.query.select) {
+            const fields = req.query.select.split(',').join(' ');
+            query = query.select(fields);
+        }
+
+        if(req.query.sort) {
+            const sortBy = req.query.sort.split(',').join(' ');
+            query = query.sort(sortBy);
+        } 
+        else query = query.sort('-createedAt');
+
+        const coworking = await query;
+
+        res.status(200).json({success: true, data: coworking});
     } catch (error) {
         res.status(400).json({success: false, msg: error});
     }

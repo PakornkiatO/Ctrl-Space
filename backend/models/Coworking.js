@@ -32,6 +32,16 @@ const CoworkingSchema = new mongoose.Schema({
         type: String,
         require: [true, 'Please add a region']
     }
+}, {
+    toJSON: {virtuals: true},
+    toObject: {virtuals: true}
 });
+
+CoworkingSchema.virtual('reservations', {
+    ref: 'Reservation',
+    localField: '_id',
+    foreignField: 'coworking',
+    justOne: false
+})
 
 module.exports = mongoose.model('Coworking', CoworkingSchema);
