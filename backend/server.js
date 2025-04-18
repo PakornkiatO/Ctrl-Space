@@ -12,9 +12,10 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
+app.use("/api/v1/line", require("./routes/line"));
 app.use("/api/v1/coworkings", require("./routes/coworkings.js"));
 app.use("/api/v1/auth", require("./routes/auth.js"));
-app.use("/api/v1/line", require("./routes/line"));
+app.use("/api/v1/reservations", require("./routes/reservations.js"));
 
 const PORT = process.env.PORT;
 const server = app.listen(
