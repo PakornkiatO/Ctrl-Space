@@ -6,7 +6,7 @@ exports.protect = async (req, res, next) => {
 
     if(req.headers.authorization && req.headers.authorization.startsWith('Bearer')) token = req.headers.authorization.split(' ')[1];
 
-    if(!token) return res.status(401).json({success: false, msg: '1'});
+    if(!token || token == 'null') return res.status(401).json({success: false, msg: 'Not authorize to access this route'});
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -18,7 +18,7 @@ exports.protect = async (req, res, next) => {
         next();
     } catch (err) {
         console.log(err.stack);
-        res.status(401).json({success: false, msg: '2'});
+        res.status(401).json({success: false, msg: 'Not authorize to access this route'});
     }
 }
 

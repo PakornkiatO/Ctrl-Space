@@ -60,3 +60,14 @@ const sendTokenResponse = (user, statusCode, res) => {
 
     res.status(statusCode).cookie('token', token, options).json({success: true, token: token});
 }
+
+exports.logout=async(req,res,next)=>{
+    res.cookie('token','none',{
+        expires: new Date(Date.now()+ 10*1000),
+        httpOnly:true
+    });
+    res.status(200).json({
+        success:true,
+        data:{}
+    });
+};
