@@ -66,9 +66,22 @@ async function handleMenu(replyToken, client) {
 
     return client.replyMessage(replyToken, menuTemplate);
 }
+async function notifyUserReservationApproaching(userId, reservation) {
+    const message = {
+        type: "text",
+        text: `🔔 Reminder: Your reservation at ${reservation.coworking.name} is starting at ${reservation.startTime}.`,
+    };
 
+    try {
+        await client.pushMessage(userId, message);
+        console.log("Notification sent to:", userId);
+    } catch (err) {
+        console.error("Failed to send notification:", err);
+    }
+}
 // ✅ export both
 module.exports = {
+    notifyUserReservationApproaching,
     handleProfile,
     handleMenu,
 };
