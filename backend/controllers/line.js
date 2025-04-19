@@ -1,6 +1,6 @@
-const { messageHandlers, postbackHandlers } = require("../service/mainHand");
+const { postbackHandlers } = require("../service/postbackHand");
+const { messageHandlers } = require("../service/messageHand");
 const lineClient = require("../utils/lineClient");
-const User = require("../models/User");
 
 // Verify webhook setup
 exports.verifyWebhook = (req, res) => {

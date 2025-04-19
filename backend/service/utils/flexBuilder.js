@@ -1,64 +1,5 @@
-const buildReservationFlexMessage = (reservations) => ({
-    type: "flex",
-    altText: "Here are your reservations",
-    contents: {
-        type: "carousel",
-        contents: reservations.map((r) => ({
-            type: "bubble",
-            body: {
-                type: "box",
-                layout: "vertical",
-                contents: [
-                    {
-                        type: "text",
-                        text: r.coworking.name,
-                        weight: "bold",
-                        size: "xl",
-                    },
-                    {
-                        type: "text",
-                        text: `📅 ${new Date(r.rsDate).toLocaleString()}`,
-                        margin: "md",
-                        size: "sm",
-                    },
-                    {
-                        type: "text",
-                        text: r.coworking.address,
-                        wrap: true,
-                        size: "sm",
-                        color: "#888888",
-                    },
-                ],
-            },
-            footer: {
-                type: "box",
-                layout: "horizontal",
-                spacing: "md",
-                contents: [
-                    {
-                        type: "button",
-                        style: "primary",
-                        color: "#FF5555",
-                        action: {
-                            type: "postback",
-                            label: "Cancel",
-                            data: `action=cancel&id=${r._id}`,
-                        },
-                    },
-                    {
-                        type: "button",
-                        style: "secondary",
-                        action: {
-                            type: "postback",
-                            label: "Edit",
-                            data: `action=edit&id=${r._id}`,
-                        },
-                    },
-                ],
-            },
-        })),
-    },
-});
+const moment = require("moment");
+
 const testFlexMessage = () => ({
     type: "bubble",
     header: {
@@ -193,60 +134,87 @@ const testFlexMessage = () => ({
         backgroundColor: "#464F69",
     },
 });
-// function buildReservationFlexMessage(reservations) {
-//     const bubbles = reservations.map((rsv) => ({
-//         type: "bubble",
-//         body: {
-//             type: "box",
-//             layout: "vertical",
-//             contents: [
-//                 {
-//                     type: "text",
-//                     text: rsv.coworking.name,
-//                     weight: "bold",
-//                     size: "xl",
-//                     wrap: true,
-//                 },
-//                 {
-//                     type: "text",
-//                     text: rsv.coworking.address,
-//                     size: "sm",
-//                     color: "#666666",
-//                     wrap: true,
-//                     margin: "md",
-//                 },
-//                 {
-//                     type: "box",
-//                     layout: "vertical",
-//                     spacing: "sm",
-//                     margin: "md",
-//                     contents: [
-//                         {
-//                             type: "text",
-//                             text: `📅 ${moment(rsv.rsDate).format(
-//                                 "YYYY-MM-DD"
-//                             )}`,
-//                             size: "sm",
-//                         },
-//                         {
-//                             type: "text",
-//                             text: `⏰ ${rsv.startTime} - ${rsv.endTime}`,
-//                             size: "sm",
-//                         },
-//                     ],
-//                 },
-//             ],
-//         },
-//     }));
 
-//     return {
-//         type: "flex",
-//         altText: "📋 Your Reservations",
-//         contents: {
-//             type: "carousel",
-//             contents: bubbles,
-//         },
-//     };
-// }
+function buildReservationFlexMessage(reservations) {
+    const bubbles = reservations.map((rsv) => ({
+        type: "bubble",
+        body: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+                {
+                    type: "text",
+                    text: rsv.coworking.name,
+                    weight: "bold",
+                    size: "xl",
+                    wrap: true,
+                },
+                {
+                    type: "text",
+                    text: rsv.coworking.address,
+                    size: "sm",
+                    color: "#666666",
+                    wrap: true,
+                    margin: "md",
+                },
+                {
+                    type: "box",
+                    layout: "vertical",
+                    spacing: "sm",
+                    margin: "md",
+                    contents: [
+                        {
+                            type: "text",
+                            text: `📅 ${moment(rsv.rsDate).format(
+                                "YYYY-MM-DD"
+                            )}`,
+                            size: "sm",
+                        },
+                        {
+                            type: "text",
+                            text: `⏰ ${rsv.startTime} - ${rsv.endTime}`,
+                            size: "sm",
+                        },
+                    ],
+                },
+            ],
+        },
+        footer: {
+            type: "box",
+            layout: "horizontal",
+            spacing: "md",
+            contents: [
+                {
+                    type: "button",
+                    style: "primary",
+                    color: "#1E90FF",
+                    action: {
+                        type: "postback",
+                        label: "Edit Time",
+                        data: `action=edit&id=${rsv._id}`,
+                    },
+                },
+                {
+                    type: "button",
+                    style: "secondary",
+                    color: "#FF5551",
+                    action: {
+                        type: "postback",
+                        label: "Cancel",
+                        data: `action=cancel&id=${rsv._id}`,
+                    },
+                },
+            ],
+        },
+    }));
 
+    return {
+        type: "flex",
+        altText: "📋 Your Reservations",
+        contents: {
+            type: "carousel",
+            contents: bubbles,
+        },
+    };
+}
 module.exports = { testFlexMessage, buildReservationFlexMessage };

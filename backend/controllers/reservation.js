@@ -4,9 +4,13 @@ const Coworking = require("../models/Reservation");
 exports.getReservations = async (req, res, next) => {
     let query;
 
-    if(req.user.role !== 'admin') query = Reservation.find({user: req.user.id}).populate({path: 'coworking', select: 'name address tel opening_hours'});
-    else { 
-        if(req.params.coworkingId){
+    if (req.user.role !== "admin")
+        query = Reservation.find({ user: req.user.id }).populate({
+            path: "coworking",
+            select: "name address tel",
+        });
+    else {
+        if (req.params.coworkingId) {
             console.log(req.params.coworkingId);
             query = Reservation.find({
                 coworking: req.params.coworkingId,
@@ -16,10 +20,8 @@ exports.getReservations = async (req, res, next) => {
                 path: "coworking",
                 select: "name address tel",
             });
-            query = Reservation.find({coworking: req.params.coworkingId}).populate({path: 'coworking', select: 'name address tel opening_hours'});
-        }
-        else query = Reservation.find().populate({path: 'coworking', select: 'name address tel opening_hours'});
     }
+
     try {
         const reservations = await query;
 
@@ -32,24 +34,30 @@ exports.getReservations = async (req, res, next) => {
         });
     }
 };
-}
 
-exports.getReservation = async (req,res,next) => {
+exports.getReservation = async (req, res, next) => {
     try {
         const reservation = await Reservation.findById(req.params.id).populate({
-            path: 'coworking',
-            select: 'name province tel opening_hours'
+            path: "coworking",
+            select: "name province tel opening_hours",
         });
 
-        if(!reservation) return res.status(404).json({success: false, msg: `No reservation with the id of ${req.params.id}`});
+        if (!reservation)
+            return res.status(404).json({
+                success: false,
+                msg: `No reservation with the id of ${req.params.id}`,
+            });
 
-        res.status(200).json({success: true, data: reservation});
+        res.status(200).json({ success: true, data: reservation });
     } catch (err) {
         console.log(err);
 
-        res.status(500).json({success: false, msg: 'Cannot find reservation'});
+        res.status(500).json({
+            success: false,
+            msg: "Cannot find reservation",
+        });
     }
-}
+};
 
 exports.addReservation = async (req, res, next) => {
     try {
@@ -73,43 +81,75 @@ exports.addReservation = async (req, res, next) => {
             msg: `Cannot create Resevation`,
         });
     }
-}
+};
 
-exports.updateReservation = async (req,res,next) => {
+exports.updateReservation = async (req, res, next) => {
     try {
         let reservation = await Reservation.findById(req.params.id);
 
-        if(!reservation) return res.status(404).json({success: false, msg: `No reservation with id of ${req.params.id}`});
+        if (!reservation)
+            return res.status(404).json({
+                success: false,
+                msg: `No reservation with id of ${req.params.id}`,
+            });
 
-        if(reservation.user.toString() !== req.user.id && req.user.role !== 'admin') return res.status(401).json({success: false, msg: `User ${req.user.id} is not authorized to update this reservation`});
+        if (
+            reservation.user.toString() !== req.user.id &&
+            req.user.role !== "admin"
+        )
+            return res.status(401).json({
+                success: false,
+                msg: `User ${req.user.id} is not authorized to update this reservation`,
+            });
 
-        reservation = await Reservation.findByIdAndUpdate(req.params.id, req.body, {
-            new: true,
-            runValidators: true
-        });
+        reservation = await Reservation.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            {
+                new: true,
+                runValidators: true,
+            }
+        );
 
-        res.status(200).json({success: true, data: reservation})
+        res.status(200).json({ success: true, data: reservation });
     } catch (err) {
         console.log(err);
 
-        res.status(500).json({success: false, msg: 'Cannot update reservation'});
+        res.status(500).json({
+            success: false,
+            msg: "Cannot update reservation",
+        });
     }
-}
+};
 
-exports.deleteReservation = async (req,res,next) => {
+exports.deleteReservation = async (req, res, next) => {
     try {
         const reservation = await Reservation.findById(req.params.id);
 
-        if(!reservation) return res.status(404).json({success: false, msg: `No reservation with id of ${req.params.id}`});
+        if (!reservation)
+            return res.status(404).json({
+                success: false,
+                msg: `No reservation with id of ${req.params.id}`,
+            });
 
-        if(reservation.user.toString() !== req.user.id && req.user.role !== 'admin') return res.status(401).json({success: false, msg: `User ${req.user.id} is not authorized to delete this reservation`});
+        if (
+            reservation.user.toString() !== req.user.id &&
+            req.user.role !== "admin"
+        )
+            return res.status(401).json({
+                success: false,
+                msg: `User ${req.user.id} is not authorized to delete this reservation`,
+            });
 
         await reservation.deleteOne();
 
-        res.status(200).json({success: true, data: {}});
+        res.status(200).json({ success: true, data: {} });
     } catch (err) {
         console.log(err);
 
-        res.status(500).json({success: false, msg: 'Cannot delete reservation'});
+        res.status(500).json({
+            success: false,
+            msg: "Cannot delete reservation",
+        });
     }
-}
+};

@@ -1,10 +1,9 @@
-const Reservation = require("../../models/Reservation");
-const User = require("../../models/User");
 const {
-    buildReservationFlexMessage,
     testFlexMessage,
+    buildReservationFlexMessage,
 } = require("./flexBuilder");
-// your Flex template above
+const User = require("../../models/User");
+const Reservation = require("../../models/Reservation");
 
 async function handleTestFlex(event, client) {
     return client.replyMessage(event.replyToken, {

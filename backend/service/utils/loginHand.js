@@ -1,7 +1,13 @@
 const User = require("../../models/User");
 const bcrypt = require("bcryptjs");
 
-let userSessions = {}; // Temp session tracking
+const {
+    userSessions,
+    getSessionStage,
+    setSessionStage,
+    clearSessionStage,
+    replyText,
+} = require("../utils/lineUtils"); // In-memory session storage
 
 async function handleLoginStart(event, client) {
     const userId = event.source.userId;
@@ -15,7 +21,7 @@ async function handleLoginStart(event, client) {
         return;
     }
 
-    userSessions[userId] = { stage: "waiting_for_email" };
+    setSessionStage(userId, "waiting_for_email");
 
     await client.replyMessage(event.replyToken, {
         type: "text",
@@ -26,7 +32,7 @@ async function handleLoginStart(event, client) {
 async function handleEmailInput(event, client, email) {
     const userId = event.source.userId;
 
-    if (!userSessions[userId]) return;
+    if (!userSessions[userId]) userSessions[userId] = {};
 
     userSessions[userId].email = email;
     userSessions[userId].stage = "waiting_for_password";
@@ -53,7 +59,7 @@ async function handlePasswordInput(event, client, password) {
         delete userSessions[userId];
         return;
     }
-
+    console.log(password, user.password);
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
         await client.replyMessage(event.replyToken, {
@@ -75,13 +81,24 @@ async function handlePasswordInput(event, client, password) {
     delete userSessions[userId];
 }
 
-function getSessionStage(userId) {
-    return userSessions[userId]?.stage;
-}
+async function handleLogout(event, client) {
+    const userId = event.source.userId;
 
+    const user = await User.findOne({ lineUserId: userId });
+
+    if (!user) {
+        return replyText(client, event.replyToken, "⚠️ You're not logged in.");
+    }
+
+    user.lineUserId = ""; // or use null if you prefer
+    await user.save();
+
+    return replyText(client, event.replyToken, "👋 You have been logged out.");
+}
 module.exports = {
     handleLoginStart,
     handleEmailInput,
     handlePasswordInput,
     getSessionStage,
+    handleLogout,
 };

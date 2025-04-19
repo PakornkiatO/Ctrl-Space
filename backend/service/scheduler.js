@@ -1,6 +1,6 @@
-const Reservation = require("../../models/Reservation");
-const User = require("../../models/User");
-const lineClient = require("../../utils/lineClient"); // your configured LINE SDK client
+const Reservation = require("../models/Reservation");
+const User = require("../models/User");
+const lineClient = require("../utils/lineClient"); // your configured LINE SDK client
 const cron = require("node-cron");
 
 async function notify(reservation) {
@@ -31,7 +31,6 @@ function startReservationScheduler() {
                     $lte: in30Minutes,
                 },
             }).populate("coworking");
-
             for (const reservation of reservations) {
                 await notify(reservation);
             }

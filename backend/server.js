@@ -7,7 +7,7 @@ const line = require("@line/bot-sdk");
 dotenv.config({ path: "./config/config.env" });
 
 connectDB();
-const { startReservationScheduler } = require("./service/line/scheduler.js");
+const { startReservationScheduler } = require("./service/scheduler.js");
 startReservationScheduler();
 
 const app = express();

@@ -1,12 +1,19 @@
+const User = require("../models/User");
+const Reservation = require("../models/Reservation");
 const {
     handleLoginStart,
     handleEmailInput,
     handlePasswordInput,
     getSessionStage,
-} = require("./line/loginHand");
-const User = require("../models/User");
+    handleLogout,
+} = require("./utils/loginHand");
 
-const { handleViewReservation, handleTestFlex } = require("./line/messageHand");
+const { handleEditInput } = require("./utils/editHand");
+
+const {
+    handleTestFlex,
+    handleViewReservation,
+} = require("./utils/messageTest");
 
 async function messageHandlers(event, client) {
     const text = event.message.text.trim().toLowerCase();
@@ -16,15 +23,17 @@ async function messageHandlers(event, client) {
     const stage = getSessionStage(userId);
     console.log(stage);
     if (stage) {
-        // const stage = userSessions[userId].stage;
         if (stage === "waiting_for_email") {
             await handleEmailInput(event, client, event.message.text.trim());
+            return;
         } else if (stage === "waiting_for_password") {
             await handlePasswordInput(event, client, event.message.text.trim());
+            return;
+        } else if (stage === "editing_reservation") {
+            await handleEditInput(event, client);
+            return;
         }
-        return;
     }
-
     if (!existingUser) {
         if (text !== "login") {
             await client.replyMessage(event.replyToken, {
@@ -37,39 +46,16 @@ async function messageHandlers(event, client) {
     // 👉 Handle login flow stages (email/password input)
 
     // Commands
+    if (text === "logout") return handleLogout(event, client);
     if (text === "flex") return handleTestFlex(event, client);
     if (text === "login") return handleLoginStart(event, client);
-    if (text === "my reservation") return handleViewReservation(event, client);
+    if (text === "reservation") return handleViewReservation(event, client);
 
     return client.replyMessage(event.replyToken, {
         type: "text",
         text: "🤖 I didn't understand that. hehehe.",
     });
 }
-
-// --------------------------------postback handlers----------------------------------//
-
-const { handleCancelReservation } = require("./line/postbackHand");
-async function postbackHandlers(event, client) {
-    const data = new URLSearchParams(event.postback.data);
-    const action = data.get("action");
-
-    const handlers = {
-        cancel: handleCancelReservation,
-    };
-
-    const handler = handlers[action];
-    if (handler) {
-        await handler(event, client);
-    } else {
-        await client.replyMessage(event.replyToken, {
-            type: "text",
-            text: `❓ Unknown action: ${action}`,
-        });
-    }
-}
-
 module.exports = {
     messageHandlers,
-    postbackHandlers,
 };
