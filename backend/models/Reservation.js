@@ -1,24 +1,28 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const ReservationSchema = new mongoose.Schema({
     rsDate: {
         type: Date,
-        require: [true, 'Please select a reservation date']
+        require: [true, "Please select a reservation date"],
     },
     user: {
         type: mongoose.Schema.ObjectId,
-        ref: 'User',
-        require: true
+        ref: "User",
+        require: true,
     },
     coworking: {
         type: mongoose.Schema.ObjectId,
-        ref: 'Coworking',
-        require: [true, 'Please select a Co-working space']
+        ref: "Coworking",
+        require: [true, "Please select a Co-working space"],
     },
     createAt: {
         type: Date,
-        default: Date.now
-    }
-})
+        default: Date.now,
+    },
+    notified: {
+        type: Boolean,
+        default: false,
+    },
+});
 
-module.exports = mongoose.model('Reservation', ReservationSchema);
+module.exports = mongoose.model("Reservation", ReservationSchema);
