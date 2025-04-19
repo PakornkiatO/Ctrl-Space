@@ -3,13 +3,10 @@ const Coworking = require("../models/Reservation");
 
 exports.getReservations = async (req, res, next) => {
     let query;
-    if (req.user.role !== "admin")
-        query = Reservation.find({ user: req.user.id }).populate({
-            path: "coworking",
-            select: "name address tel",
-        });
-    else {
-        if (req.params.coworkingId) {
+
+    if(req.user.role !== 'admin') query = Reservation.find({user: req.user.id}).populate({path: 'coworking', select: 'name address tel opening_hours'});
+    else { 
+        if(req.params.coworkingId){
             console.log(req.params.coworkingId);
             query = Reservation.find({
                 coworking: req.params.coworkingId,
@@ -19,6 +16,9 @@ exports.getReservations = async (req, res, next) => {
                 path: "coworking",
                 select: "name address tel",
             });
+            query = Reservation.find({coworking: req.params.coworkingId}).populate({path: 'coworking', select: 'name address tel opening_hours'});
+        }
+        else query = Reservation.find().populate({path: 'coworking', select: 'name address tel opening_hours'});
     }
     try {
         const reservations = await query;
@@ -32,6 +32,24 @@ exports.getReservations = async (req, res, next) => {
         });
     }
 };
+}
+
+exports.getReservation = async (req,res,next) => {
+    try {
+        const reservation = await Reservation.findById(req.params.id).populate({
+            path: 'coworking',
+            select: 'name province tel opening_hours'
+        });
+
+        if(!reservation) return res.status(404).json({success: false, msg: `No reservation with the id of ${req.params.id}`});
+
+        res.status(200).json({success: true, data: reservation});
+    } catch (err) {
+        console.log(err);
+
+        res.status(500).json({success: false, msg: 'Cannot find reservation'});
+    }
+}
 
 exports.addReservation = async (req, res, next) => {
     try {
@@ -55,25 +73,43 @@ exports.addReservation = async (req, res, next) => {
             msg: `Cannot create Resevation`,
         });
     }
-};
+}
 
-exports.deleteReservation = async (req, res) => {
-    const { reservationId } = req.params; // Assuming reservationId is passed in URL params
-    const reservation = await Reservation.findOne({
-        _id: reservationId,
-        user: req.user.id,
-    });
-    if (!reservation) {
-        return res
-            .status(403)
-            .json({ message: "Unauthorized or reservation not found" });
-    }
-
+exports.updateReservation = async (req,res,next) => {
     try {
-        await reservation.remove();
-        res.status(200).json({ message: "Reservation deleted" });
+        let reservation = await Reservation.findById(req.params.id);
+
+        if(!reservation) return res.status(404).json({success: false, msg: `No reservation with id of ${req.params.id}`});
+
+        if(reservation.user.toString() !== req.user.id && req.user.role !== 'admin') return res.status(401).json({success: false, msg: `User ${req.user.id} is not authorized to update this reservation`});
+
+        reservation = await Reservation.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+            runValidators: true
+        });
+
+        res.status(200).json({success: true, data: reservation})
     } catch (err) {
-        console.error("Error deleting reservation:", err);
-        res.status(500).json({ message: "Error deleting reservation" });
+        console.log(err);
+
+        res.status(500).json({success: false, msg: 'Cannot update reservation'});
     }
-};
+}
+
+exports.deleteReservation = async (req,res,next) => {
+    try {
+        const reservation = await Reservation.findById(req.params.id);
+
+        if(!reservation) return res.status(404).json({success: false, msg: `No reservation with id of ${req.params.id}`});
+
+        if(reservation.user.toString() !== req.user.id && req.user.role !== 'admin') return res.status(401).json({success: false, msg: `User ${req.user.id} is not authorized to delete this reservation`});
+
+        await reservation.deleteOne();
+
+        res.status(200).json({success: true, data: {}});
+    } catch (err) {
+        console.log(err);
+
+        res.status(500).json({success: false, msg: 'Cannot delete reservation'});
+    }
+}

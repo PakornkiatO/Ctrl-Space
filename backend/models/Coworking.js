@@ -31,6 +31,10 @@ const CoworkingSchema = new mongoose.Schema({
     region: {
         type: String,
         require: [true, 'Please add a region']
+    },
+    opening_hours: {
+        type: String,
+        require: [true, 'Please add a opening hours']
     }
 }, {
     toJSON: {virtuals: true},
