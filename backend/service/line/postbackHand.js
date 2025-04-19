@@ -1,4 +1,5 @@
 const { cancelReservation } = require("./lineUtils");
+const { handleRegisterFlow } = require("./loginHand");
 
 async function handleCancelReservation(event, client) {
     const data = new URLSearchParams(event.postback.data);
@@ -20,7 +21,6 @@ async function handleCancelReservation(event, client) {
         });
     }
 }
-
 module.exports = {
     handleCancelReservation,
 };

@@ -39,7 +39,7 @@ const UserSchema = new mongoose.Schema({
     },
     lineUserId: {
         type: String, // This stores the LINE User ID
-        required: true, // You could adjust this based on your use case
+        required: false, // You could adjust this based on your use case
     },
 });
 

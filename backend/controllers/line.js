@@ -20,24 +20,6 @@ exports.webhook = (req, res) => {
 
 // Handle the event based on its type (message, postback, etc.)
 async function handleEvent(event, client) {
-    const userId = event.source.userId;
-    let user = await User.findOne({ lineUserId: userId });
-    // if (!user) {
-    //     // If user does not exist
-    //     user = new User({
-    //         name: `User ${userId}`, // You can assign a default name, or get it from LINE's profile API
-    //         lineUserId: userId, // Store LINE's userId
-    //     });
-    //     await user.save();
-    //     console.log(`New user created with LINE ID: ${userId}`);
-    // } else {
-    //     // If user already exists
-    //     if (!user.lineUserId) {
-    //         user.lineUserId = userId;
-    //         await user.save();
-    //         console.log(`Existing user updated with LINE ID: ${userId}`);
-    //     }
-    // }
     if (event.type === "message") {
         console.log(`Received message event: ${event.message.text}`);
         await messageHandlers(event, client); // Handle message event
