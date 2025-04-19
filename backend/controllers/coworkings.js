@@ -1,7 +1,7 @@
 const Coworking = require('../models/Coworking')
 const Reservation = require('../models/Reservation')
 
-exports.getCoworkings = async (req, res) => {
+exports.getCoworkings = async (req, res, next) => {
     // res.status(200).json({success: true, msg: `Show all Co-Working spaces`});
     try {
         // const coworkings = await Coworking.find(req.query);
@@ -50,19 +50,39 @@ exports.getCoworkings = async (req, res) => {
     }
 }
 
-exports.getCoworking = (req, res) => {
-    res.status(200).json({success: true, msg: `Show Co-Working space ID:${req.params.id}`});
+exports.getCoworking = async (req, res, next) => {
+    // res.status(200).json({success: true, msg: `Show Co-Working space ID:${req.params.id}`});
+    try {
+        const coworking = await Coworking.findById(req.params.id);
+
+        if(!coworking) res.status(400).json({success: false, msg: `Failed to get Co-working id: ${req.params.id}`})
+        res.status(200).json({success: true, msg: `Show Co-working ${req.params.id}`, data: coworking});
+    } catch (err) {
+        res.status(400).json({success: false, msg: `${err}`});
+    }
 }
 
-exports.createCoworking = async (req, res) => {
+exports.createCoworking = async (req, res, next) => {
     // res.status(200).json({success: true, msg: `Creat new Co-Working spaces`});
     const coworking = await Coworking.create(req.body);
 
     res.status(200).json({success: true, data: coworking});
 }
 
-exports.updateCoworking = (req, res) => {
-    res.status(200).json({success: true, msg: `Update Co-Working space ID:${req.params.id}`});
+exports.updateCoworking = async (req, res, next) => {
+    // res.status(200).json({success: true, msg: `Update Co-Working space ID:${req.params.id}`});
+    try {
+        const coworking = await Coworking.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+            runValidators: true
+        });
+
+        if(!coworking) return res.status(400).json({success: false, msg: `Failed to find Co-working id: ${req.params.id}`});
+
+        res.status(200).json({success: true, msg: `Update Co-working ${req.params.id}`, data: coworking});        
+    } catch (err) {
+        res.status(400).json({success: false, msg: `${err}`});
+    }
 }
 
 exports.deleteCoworking = async (req, res, next) => {

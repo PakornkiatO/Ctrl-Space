@@ -4,13 +4,13 @@ const Coworking = require('../models/Reservation');
 exports.getReservations = async (req, res, next) => {
     let query;
 
-    if(req.user.role !== 'admin') query = Reservation.find({user: req.user.id}).populate({path: 'coworking', select: 'name address tel'});
+    if(req.user.role !== 'admin') query = Reservation.find({user: req.user.id}).populate({path: 'coworking', select: 'name address tel opening_hours'});
     else { 
         if(req.params.coworkingId){
             console.log(req.params.coworkingId);
-            query = Reservation.find({coworking: req.params.coworkingId}).populate({path: 'coworking', select: 'name address tel'});
+            query = Reservation.find({coworking: req.params.coworkingId}).populate({path: 'coworking', select: 'name address tel opening_hours'});
         }
-        else query = Reservation.find().populate({path: 'coworking', select: 'name address tel'});
+        else query = Reservation.find().populate({path: 'coworking', select: 'name address tel opening_hours'});
     }
 
     try {
