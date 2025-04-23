@@ -74,4 +74,5 @@ module.exports = {
     getEditSession,
     handleEditInput,
     promptTimeEdit,
+    handleEditReservation,
 };
