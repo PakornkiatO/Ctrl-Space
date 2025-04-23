@@ -1,6 +1,6 @@
 const { handleCancelReservation } = require("./utils/cancelHand");
-const { replyText } = require("./utils/lineUtils");
-const { startEditSession, promptTimeEdit } = require("./utils/editHand");
+const { replyText } = require("../utils/lineClient");
+const { startEditSession, handleEditReservation } = require("./utils/editHand");
 const Reservation = require("../models/Reservation");
 
 async function postbackHandlers(event, client) {
@@ -12,9 +12,8 @@ async function postbackHandlers(event, client) {
 
     switch (action) {
         case "edit":
-            // startEditSession(lineUserId, data.id);
-            startEditSession(lineUserId, reservationId);
-            return promptTimeEdit(event.replyToken, client);
+            await startEditSession(lineUserId, reservationId);
+            await handleEditReservation(event, client);
 
         case "cancel":
             return await handleCancelReservation(
@@ -29,12 +28,12 @@ async function postbackHandlers(event, client) {
     }
 }
 
-function parsePostbackData(rawData) {
-    const data = {};
-    rawData.split("&").forEach((pair) => {
-        const [key, value] = pair.split("=");
-        data[key] = value;
-    });
-    return data;
-}
+// function parsePostbackData(rawData) {
+//     const data = {};
+//     rawData.split("&").forEach((pair) => {
+//         const [key, value] = pair.split("=");
+//         data[key] = value;
+//     });
+//     return data;
+// }
 module.exports = { postbackHandlers };

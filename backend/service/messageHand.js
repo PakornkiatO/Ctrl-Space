@@ -1,15 +1,8 @@
 const User = require("../models/User");
-const Reservation = require("../models/Reservation");
-const {
-    handleLoginStart,
-    handleEmailInput,
-    handlePasswordInput,
-    getSessionStage,
-    handleLogout,
-} = require("./utils/loginHand");
 
+const { handleLoginRequest } = require("./utils/loginHand");
 const { handleEditInput } = require("./utils/editHand");
-
+const { replyText } = require("../utils/lineClient");
 const {
     handleTestFlex,
     handleViewReservation,
@@ -23,23 +16,18 @@ async function messageHandlers(event, client) {
     const stage = getSessionStage(userId);
     console.log(stage);
     if (stage) {
-        if (stage === "waiting_for_email") {
-            await handleEmailInput(event, client, event.message.text.trim());
-            return;
-        } else if (stage === "waiting_for_password") {
-            await handlePasswordInput(event, client, event.message.text.trim());
-            return;
-        } else if (stage === "editing_reservation") {
+        if (stage === "editing_reservation") {
             await handleEditInput(event, client);
             return;
         }
     }
     if (!existingUser) {
         if (text !== "login") {
-            await client.replyMessage(event.replyToken, {
-                type: "text",
-                text: "Who are you, login first talk after.",
-            });
+            await replyText(
+                client,
+                event.replyToken,
+                "⚠️ You need to log in first. Type 'login' to start."
+            );
             return;
         }
     }
@@ -48,14 +36,33 @@ async function messageHandlers(event, client) {
     // Commands
     if (text === "logout") return handleLogout(event, client);
     if (text === "flex") return handleTestFlex(event, client);
-    if (text === "login") return handleLoginStart(event, client);
+    if (text === "login") return handleLoginRequest(event, client);
     if (text === "reservation") return handleViewReservation(event, client);
-
-    return client.replyMessage(event.replyToken, {
-        type: "text",
-        text: "🤖 I didn't understand that. hehehe.",
-    });
+    replyText(client, event.replyToken, "🤖 I didn't understand that. hehehe.");
 }
+// function startEditSession(lineUserId, reservationId) {
+//     if (!userSessions[lineUserId]) userSessions[lineUserId] = {};
+//     userSessions[lineUserId].editReservationId = reservationId;
+//     userSessions[lineUserId].stage = "editing_reservation";
+//     console.log(userSessions[lineUserId].stage);
+// }
+// function getEditSession(lineUserId) {
+//     return userSessions[lineUserId]?.editReservationId || null;
+// }
+// function clearEditSession(lineUserId) {
+//     if (userSessions[lineUserId]) {
+//         delete userSessions[lineUserId].editReservationId;
+//         delete userSessions[lineUserId].stage;
+//     }
+// }
+// function getSessionStage(userId) {
+//     return userSessions[userId]?.stage || null;
+// }
+
 module.exports = {
     messageHandlers,
+    startEditSession,
+    getEditSession,
+    clearEditSession,
+    getSessionStage,
 };

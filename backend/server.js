@@ -2,19 +2,21 @@ const express = require("express");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const connectDB = require("./config/db.js");
-const line = require("@line/bot-sdk");
 
 dotenv.config({ path: "./config/config.env" });
 
 connectDB();
 const { startReservationScheduler } = require("./service/scheduler.js");
+const { lineCallbackUrl } = require("./utils/lineClient.js");
 startReservationScheduler();
 
 const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
-
+// console.log("LINE_CHANNEL_ID:", process.env.LINELOGIN_CHANNEL_ID);
+// console.log("LINE_CHANNEL_SECRET:", process.env.LINELOGIN_CHANNEL_SECRET);
+// console.log(lineCallbackUrl);
 app.use("/api/v1/coworkings", require("./routes/coworkings.js"));
 app.use("/api/v1/auth", require("./routes/auth.js"));
 app.use("/api/v1/reservations", require("./routes/reservations.js"));

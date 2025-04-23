@@ -1,4 +1,7 @@
 const moment = require("moment");
+const { client } = require("../../utils/lineClient");
+const { loginUrl } = require("../../utils/lineClient");
+const { getCoworking } = require("../../controllers/coworkings");
 
 const testFlexMessage = () => ({
     type: "bubble",
@@ -134,6 +137,114 @@ const testFlexMessage = () => ({
         backgroundColor: "#464F69",
     },
 });
+const loginRequestFlex = () => ({
+    type: "bubble",
+    hero: {
+        type: "image",
+        url: "https://scdn.line-apps.com/n/channel_devcenter/img/fx/01_1_cafe.png",
+        size: "full",
+        aspectRatio: "20:13",
+        aspectMode: "cover",
+    },
+    body: {
+        type: "box",
+        layout: "vertical",
+        contents: [
+            {
+                type: "text",
+                text: "Welcome to our service!",
+                weight: "bold",
+                size: "xl",
+                margin: "md",
+            },
+            {
+                type: "text",
+                text: "Tap the button below to login using CTRL-Space.",
+                wrap: true,
+                color: "#666666",
+                size: "sm",
+                margin: "md",
+            },
+        ],
+    },
+    footer: {
+        type: "box",
+        layout: "vertical",
+        spacing: "sm",
+        contents: [
+            {
+                type: "button",
+                style: "primary",
+                color: "#00C300",
+                action: {
+                    type: "uri",
+                    label: "Login",
+                    uri: loginUrl, // Replace with your actual LINE Login URL
+                },
+            },
+        ],
+    },
+});
+function getCoworkingFlex(coworkings, page = 1, totalPages = 1) {
+    const items = coworkings.map((c) => ({
+        type: "bubble",
+        body: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+                {
+                    type: "text",
+                    text: c.name,
+                    weight: "bold",
+                    size: "lg",
+                    wrap: true,
+                },
+                {
+                    type: "text",
+                    text: c.description || "No description",
+                    size: "sm",
+                    wrap: true,
+                },
+                {
+                    type: "text",
+                    text: `📍 ${c.location || "No location"}`,
+                    size: "sm",
+                    wrap: true,
+                },
+            ],
+        },
+    }));
+
+    if (page < totalPages) {
+        items.push({
+            type: "bubble",
+            body: {
+                type: "box",
+                layout: "vertical",
+                contents: [
+                    {
+                        type: "button",
+                        action: {
+                            type: "postback",
+                            label: "▶️ Next Page",
+                            data: `action=getCoworkings&page=${page + 1}`,
+                        },
+                        style: "primary",
+                    },
+                ],
+            },
+        });
+    }
+
+    return {
+        type: "flex",
+        altText: "📍 Coworking Spaces",
+        contents: {
+            type: "carousel",
+            contents: items,
+        },
+    };
+}
 
 function buildReservationFlexMessage(reservations) {
     const bubbles = reservations.map((rsv) => ({
@@ -217,4 +328,10 @@ function buildReservationFlexMessage(reservations) {
         },
     };
 }
-module.exports = { testFlexMessage, buildReservationFlexMessage };
+
+module.exports = {
+    testFlexMessage,
+    buildReservationFlexMessage,
+    loginRequestFlex,
+    getCoworkingFlex,
+};

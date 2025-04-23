@@ -4,14 +4,13 @@ const {
 } = require("./flexBuilder");
 const User = require("../../models/User");
 const Reservation = require("../../models/Reservation");
+const { replyText } = require("../../utils/lineClient");
 
 async function handleTestFlex(event, client) {
     return client.replyMessage(event.replyToken, {
         type: "flex",
         altText: "Your mom",
         contents: testFlexMessage(),
-        // type: "text",
-        // text: "📭 You don't have any reservations yet.",
     });
 }
 
@@ -20,10 +19,11 @@ async function handleViewReservation(event, client) {
 
     const user = await User.findOne({ lineUserId });
     if (!user) {
-        return client.replyMessage(event.replyToken, {
-            type: "text",
-            text: "⚠️ Please register before viewing your reservations.",
-        });
+        replyText(
+            client,
+            event.replyToken,
+            "⚠️ Please register before viewing your reservations."
+        );
     }
 
     const reservations = await Reservation.find({ user: user._id })
@@ -32,10 +32,11 @@ async function handleViewReservation(event, client) {
         .limit(3);
 
     if (reservations.length === 0) {
-        return client.replyMessage(event.replyToken, {
-            type: "text",
-            text: "📭 You don't have any reservations yet.",
-        });
+        replyText(
+            client,
+            event.replyToken,
+            "📭 You don't have any reservations yet."
+        );
     }
 
     const flexMessage = buildReservationFlexMessage(reservations);

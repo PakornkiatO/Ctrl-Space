@@ -1,16 +1,17 @@
 const Reservation = require("../../models/Reservation");
+const { replyText } = require("../../utils/lineClient");
 const {
-    replyText,
-    startEditSession,
     getEditSession,
+    startEditSession,
     clearEditSession,
-} = require("../utils/lineUtils");
+    getSessionStage,
+} = require("../messageHand");
 
 function promptTimeEdit(replyToken, client) {
     return replyText(
         client,
         replyToken,
-        "🛠 Please enter the new time as `HH:mm - HH:mm` (e.g. 13:00 - 15:00)"
+        "📅 Please enter the new date and time in this format:\n\n`YYYY-MM-DD HH:mm - HH:mm`\n\nExample: `2025-04-26 13:00 - 15:00`"
     );
 }
 async function handleEditReservation(event, client) {
@@ -36,18 +37,21 @@ async function handleEditInput(event, client) {
     if (!reservationId) return false; // User is not in editing stage
     console.log("is here");
 
-    const match = text.match(/^(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})$/);
+    const match = text.match(
+        /^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})$/
+    );
     if (!match) {
         return replyText(
             client,
             event.replyToken,
-            "❌ Invalid format. Use `HH:mm - HH:mm`"
+            "❌ Invalid format. Use `YYYY-MM-DD HH:mm - HH:mm`"
         );
     }
 
-    const [_, startTime, endTime] = match;
+    const [_, date, startTime, endTime] = match;
     try {
         await Reservation.findByIdAndUpdate(reservationId, {
+            date,
             startTime,
             endTime,
         });
@@ -55,7 +59,7 @@ async function handleEditInput(event, client) {
         return replyText(
             client,
             event.replyToken,
-            `✅ Updated to ⏰ ${startTime} - ${endTime}`
+            `✅ Updated reservation:\n📅 ${date}\n⏰ ${startTime} - ${endTime}`
         );
     } catch (err) {
         console.error("Edit error:", err);
@@ -70,8 +74,6 @@ async function handleEditInput(event, client) {
 // ------------------------------handle cancel reservation------------------------------
 
 module.exports = {
-    startEditSession,
-    getEditSession,
     handleEditInput,
-    promptTimeEdit,
+    handleEditReservation,
 };

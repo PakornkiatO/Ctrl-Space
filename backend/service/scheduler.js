@@ -1,6 +1,6 @@
 const Reservation = require("../models/Reservation");
 const User = require("../models/User");
-const lineClient = require("../utils/lineClient"); // your configured LINE SDK client
+const { client } = require("../utils/lineClient"); // your configured LINE SDK client
 const cron = require("node-cron");
 
 async function notify(reservation) {
@@ -8,7 +8,7 @@ async function notify(reservation) {
         const user = await User.findById(reservation.user);
         if (!user || !user.lineUserId) return;
 
-        await lineClient.pushMessage(user.lineUserId, {
+        await client.pushMessage(user.lineUserId, {
             type: "text",
             text: `🔔 Reminder: Your reservation at ${reservation.coworking.name} is in 30 minutes!`,
         });

@@ -1,6 +1,6 @@
 const Reservation = require("../../models/Reservation");
 const User = require("../../models/User");
-const { replyText } = require("./lineUtils");
+const { replyText } = require("../../utils/lineClient");
 
 async function handleCancelReservation(
     reservationId,

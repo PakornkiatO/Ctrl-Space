@@ -1,6 +1,6 @@
 const { postbackHandlers } = require("../service/postbackHand");
 const { messageHandlers } = require("../service/messageHand");
-const lineClient = require("../utils/lineClient");
+const { client } = require("../utils/lineClient");
 
 // Verify webhook setup
 exports.verifyWebhook = (req, res) => {
@@ -8,7 +8,7 @@ exports.verifyWebhook = (req, res) => {
 };
 
 exports.webhook = (req, res) => {
-    Promise.all(req.body.events.map((event) => handleEvent(event, lineClient)))
+    Promise.all(req.body.events.map((event) => handleEvent(event, client))) // Process each event in parallel
         .then((result) => {
             res.json(result); // Respond with the result after processing all events
         })
