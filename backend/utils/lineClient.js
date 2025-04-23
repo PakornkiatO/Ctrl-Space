@@ -19,9 +19,17 @@ function replyText(client, token, message) {
         text: message,
     });
 }
+function replyFlex(client, token, flex) {
+    return client.replyMessage(token, {
+        type: "flex",
+        altText: "Coworking spaces",
+        contents: flex,
+    });
+}
 module.exports = {
     client,
     lineCallbackUrl,
     loginUrl,
     replyText,
+    replyFlex,
 };

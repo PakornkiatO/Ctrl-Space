@@ -1,11 +1,6 @@
 const Reservation = require("../../models/Reservation");
 const { replyText } = require("../../utils/lineClient");
-const {
-    getEditSession,
-    startEditSession,
-    clearEditSession,
-    getSessionStage,
-} = require("../messageHand");
+const { getEditSession, clearEditSession } = require("../sessionHand"); // ✅ Now imports from sessionHand
 
 function promptTimeEdit(replyToken, client) {
     return replyText(
@@ -14,6 +9,7 @@ function promptTimeEdit(replyToken, client) {
         "📅 Please enter the new date and time in this format:\n\n`YYYY-MM-DD HH:mm - HH:mm`\n\nExample: `2025-04-26 13:00 - 15:00`"
     );
 }
+
 async function handleEditReservation(event, client) {
     const userId = event.source.userId;
     const reservationId = getEditSession(userId);
@@ -26,20 +22,20 @@ async function handleEditReservation(event, client) {
         );
     }
 
-    // Proceed with the edit flow
     return promptTimeEdit(event.replyToken, client);
 }
 
 async function handleEditInput(event, client) {
     const text = event.message.text.trim();
-    const lineUserId = event.source.userId;
-    const reservationId = getEditSession(lineUserId); // Get reservation being edited
-    if (!reservationId) return false; // User is not in editing stage
-    console.log("is here");
+    const userId = event.source.userId;
+    const reservationId = getEditSession(userId);
+
+    if (!reservationId) return false;
 
     const match = text.match(
         /^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})$/
     );
+
     if (!match) {
         return replyText(
             client,
@@ -49,13 +45,16 @@ async function handleEditInput(event, client) {
     }
 
     const [_, date, startTime, endTime] = match;
+
     try {
         await Reservation.findByIdAndUpdate(reservationId, {
             date,
             startTime,
             endTime,
         });
-        clearEditSession(lineUserId); // Clear edit session
+
+        clearEditSession(userId);
+
         return replyText(
             client,
             event.replyToken,
@@ -70,8 +69,6 @@ async function handleEditInput(event, client) {
         );
     }
 }
-
-// ------------------------------handle cancel reservation------------------------------
 
 module.exports = {
     handleEditInput,

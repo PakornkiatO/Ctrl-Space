@@ -1,5 +1,4 @@
 const User = require("../models/User");
-
 const { handleLoginRequest } = require("./utils/loginHand");
 const { handleEditInput } = require("./utils/editHand");
 const { replyText } = require("../utils/lineClient");
@@ -7,6 +6,8 @@ const {
     handleTestFlex,
     handleViewReservation,
 } = require("./utils/messageTest");
+const { handleGetCoworkings } = require("./utils/coworkHand");
+const { getSessionStage } = require("./sessionHand"); // ✅ Pull from sessionHand
 
 async function messageHandlers(event, client) {
     const text = event.message.text.trim().toLowerCase();
@@ -31,38 +32,22 @@ async function messageHandlers(event, client) {
             return;
         }
     }
-    // 👉 Handle login flow stages (email/password input)
 
-    // Commands
+    // 👉 Command Handling
+    if (text === "coworking spaces" || text === "get coworking")
+        return await handleGetCoworkings(event, client);
     if (text === "logout") return handleLogout(event, client);
     if (text === "flex") return handleTestFlex(event, client);
     if (text === "login") return handleLoginRequest(event, client);
     if (text === "reservation") return handleViewReservation(event, client);
-    replyText(client, event.replyToken, "🤖 I didn't understand that. hehehe.");
+
+    return replyText(
+        client,
+        event.replyToken,
+        "🤖 I didn't understand that. hehehe."
+    );
 }
-// function startEditSession(lineUserId, reservationId) {
-//     if (!userSessions[lineUserId]) userSessions[lineUserId] = {};
-//     userSessions[lineUserId].editReservationId = reservationId;
-//     userSessions[lineUserId].stage = "editing_reservation";
-//     console.log(userSessions[lineUserId].stage);
-// }
-// function getEditSession(lineUserId) {
-//     return userSessions[lineUserId]?.editReservationId || null;
-// }
-// function clearEditSession(lineUserId) {
-//     if (userSessions[lineUserId]) {
-//         delete userSessions[lineUserId].editReservationId;
-//         delete userSessions[lineUserId].stage;
-//     }
-// }
-// function getSessionStage(userId) {
-//     return userSessions[userId]?.stage || null;
-// }
 
 module.exports = {
     messageHandlers,
-    startEditSession,
-    getEditSession,
-    clearEditSession,
-    getSessionStage,
 };

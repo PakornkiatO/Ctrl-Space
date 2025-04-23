@@ -16,7 +16,6 @@ async function handleTestFlex(event, client) {
 
 async function handleViewReservation(event, client) {
     const lineUserId = event.source.userId;
-
     const user = await User.findOne({ lineUserId });
     if (!user) {
         replyText(
