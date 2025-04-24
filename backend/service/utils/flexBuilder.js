@@ -1,4 +1,4 @@
-const moment = require("moment");
+const moment = require("moment-timezone");
 const { client } = require("../../utils/lineClient");
 const { loginUrl } = require("../../utils/lineClient");
 const { getCoworking } = require("../../controllers/coworkings");
@@ -191,6 +191,7 @@ function getCoworkingFlex(coworkings, page = 1, totalPages = 1) {
         body: {
             type: "box",
             layout: "vertical",
+            // paddingAll: "5px",
             contents: [
                 {
                     type: "text",
@@ -211,6 +212,18 @@ function getCoworkingFlex(coworkings, page = 1, totalPages = 1) {
                     size: "sm",
                     wrap: true,
                 },
+                {
+                    type: "button",
+                    action: {
+                        type: "postback",
+                        label: "Reserve",
+                        data: `action=createReservation&coworkingId=${c.id}`,
+                        displayText: `Reserve at ${c.name}`,
+                    },
+                    // paddingTop: "10px",
+                    style: "primary",
+                    margin: "md",
+                },
             ],
         },
     }));
@@ -221,13 +234,16 @@ function getCoworkingFlex(coworkings, page = 1, totalPages = 1) {
             body: {
                 type: "box",
                 layout: "vertical",
+                // alignItems: "center",
+                justifyContent: "center",
                 contents: [
                     {
                         type: "button",
                         action: {
                             type: "postback",
                             label: "▶️ Next Page",
-                            data: `action=getCoworkings&page=${page + 1}`,
+                            data: `action=getCoworking&page=${page + 1}`,
+                            displayText: "Next Page",
                         },
                         style: "primary",
                     },
@@ -246,78 +262,88 @@ function getCoworkingFlex(coworkings, page = 1, totalPages = 1) {
     };
 }
 
-function buildReservationFlexMessage(reservations) {
-    const bubbles = reservations.map((rsv) => ({
-        type: "bubble",
-        body: {
-            type: "box",
-            layout: "vertical",
-            contents: [
-                {
-                    type: "text",
-                    text: rsv.coworking.name,
-                    weight: "bold",
-                    size: "xl",
-                    wrap: true,
-                },
-                {
-                    type: "text",
-                    text: rsv.coworking.address,
-                    size: "sm",
-                    color: "#666666",
-                    wrap: true,
-                    margin: "md",
-                },
-                {
-                    type: "box",
-                    layout: "vertical",
-                    spacing: "sm",
-                    margin: "md",
-                    contents: [
-                        {
-                            type: "text",
-                            text: `📅 ${moment(rsv.rsDate).format(
-                                "YYYY-MM-DD"
-                            )}`,
-                            size: "sm",
-                        },
-                        {
-                            type: "text",
-                            text: `⏰ ${rsv.startTime} - ${rsv.endTime}`,
-                            size: "sm",
-                        },
-                    ],
-                },
-            ],
-        },
-        footer: {
-            type: "box",
-            layout: "horizontal",
-            spacing: "md",
-            contents: [
-                {
-                    type: "button",
-                    style: "primary",
-                    color: "#1E90FF",
-                    action: {
-                        type: "postback",
-                        label: "Edit Time",
-                        data: `action=edit&id=${rsv._id}`,
+function viewReservationFlex(reservations) {
+    const bubbles = reservations.map((rsv) => {
+        const startFormatted = moment(rsv.startTime)
+            .tz("Asia/Bangkok")
+            .format("HH:mm");
+        const endFormatted = moment(rsv.endTime)
+            .tz("Asia/Bangkok")
+            .format("HH:mm");
+
+        console.log(rsv.startTime, rsv.startTime);
+        return {
+            type: "bubble",
+            body: {
+                type: "box",
+                layout: "vertical",
+                contents: [
+                    {
+                        type: "text",
+                        text: rsv.coworking.name,
+                        weight: "bold",
+                        size: "xl",
+                        wrap: true,
                     },
-                },
-                {
-                    type: "button",
-                    style: "secondary",
-                    color: "#FF5551",
-                    action: {
-                        type: "postback",
-                        label: "Cancel",
-                        data: `action=cancel&id=${rsv._id}`,
+                    {
+                        type: "text",
+                        text: rsv.coworking.address,
+                        size: "sm",
+                        color: "#666666",
+                        wrap: true,
+                        margin: "md",
                     },
-                },
-            ],
-        },
-    }));
+                    {
+                        type: "box",
+                        layout: "vertical",
+                        spacing: "sm",
+                        margin: "md",
+                        contents: [
+                            {
+                                type: "text",
+                                text: `📅 ${moment(rsv.rsDate).format(
+                                    "YYYY-MM-DD"
+                                )}`,
+                                size: "sm",
+                            },
+                            {
+                                type: "text",
+                                text: `⏰ ${startFormatted} - ${endFormatted}`,
+                                size: "sm",
+                            },
+                        ],
+                    },
+                ],
+            },
+            footer: {
+                type: "box",
+                layout: "horizontal",
+                spacing: "md",
+                contents: [
+                    {
+                        type: "button",
+                        style: "primary",
+                        color: "#1E90FF",
+                        action: {
+                            type: "postback",
+                            label: "Edit Time",
+                            data: `action=edit&id=${rsv._id}`,
+                        },
+                    },
+                    {
+                        type: "button",
+                        style: "secondary",
+                        color: "#FF5551",
+                        action: {
+                            type: "postback",
+                            label: "Cancel",
+                            data: `action=cancel&id=${rsv._id}`,
+                        },
+                    },
+                ],
+            },
+        };
+    });
 
     return {
         type: "flex",
@@ -331,7 +357,7 @@ function buildReservationFlexMessage(reservations) {
 
 module.exports = {
     testFlexMessage,
-    buildReservationFlexMessage,
+    viewReservationFlex,
     loginRequestFlex,
     getCoworkingFlex,
 };

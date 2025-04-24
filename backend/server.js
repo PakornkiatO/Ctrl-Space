@@ -5,31 +5,42 @@ const connectDB = require("./config/db.js");
 
 dotenv.config({ path: "./config/config.env" });
 
-connectDB();
-const { startReservationScheduler } = require("./service/scheduler.js");
-const { lineCallbackUrl } = require("./utils/lineClient.js");
-startReservationScheduler();
+(async () => {
+    try {
+        await connectDB();
 
-const app = express();
+        const {
+            startReservationScheduler,
+            deleteReservationExpired,
+        } = require("./service/scheduler.js");
+        startReservationScheduler();
+        deleteReservationExpired();
+        const app = express();
 
-app.use(express.json());
-app.use(cookieParser());
-// console.log("LINE_CHANNEL_ID:", process.env.LINELOGIN_CHANNEL_ID);
-// console.log("LINE_CHANNEL_SECRET:", process.env.LINELOGIN_CHANNEL_SECRET);
-// console.log(lineCallbackUrl);
-app.use("/api/v1/coworkings", require("./routes/coworkings.js"));
-app.use("/api/v1/auth", require("./routes/auth.js"));
-app.use("/api/v1/reservations", require("./routes/reservations.js"));
-app.use("/api/v1/line", require("./routes/line.js"));
+        app.use(express.json());
+        app.use(cookieParser());
 
-const PORT = process.env.PORT;
-const server = app.listen(
-    PORT,
-    console.log("Server running in ", process.env.NODE_ENV, " on port ", PORT)
-);
+        app.use("/api/v1/coworkings", require("./routes/coworkings.js"));
+        app.use("/api/v1/auth", require("./routes/auth.js"));
+        app.use("/api/v1/reservations", require("./routes/reservations.js"));
+        app.use("/api/v1/line", require("./routes/line.js"));
 
-process.on("unhandleRejection", (err, promise) => {
-    console.log(`Error: ${err.message}`);
+        const PORT = process.env.PORT || 5000;
+        const server = app.listen(PORT, () => {
+            console.log(
+                "✅ Server running in",
+                process.env.NODE_ENV,
+                "on port",
+                PORT
+            );
+        });
 
-    server.close(() => process.exit(1));
-});
+        process.on("unhandledRejection", (err, promise) => {
+            console.error(`❌ Error: ${err.message}`);
+            server.close(() => process.exit(1));
+        });
+    } catch (err) {
+        console.error("❌ Failed to start server:", err);
+        process.exit(1);
+    }
+})();

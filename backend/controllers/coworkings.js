@@ -48,7 +48,7 @@ exports.getCoworkings = async (req, res, next) => {
 
         res.status(200).json({
             success: true,
-            count: coworking.length,
+            count: total,
             pagination,
             data: coworking,
         });
@@ -97,12 +97,10 @@ exports.updateCoworking = async (req, res, next) => {
         );
 
         if (!coworking)
-            return res
-                .status(400)
-                .json({
-                    success: false,
-                    msg: `Failed to find Co-working id: ${req.params.id}`,
-                });
+            return res.status(400).json({
+                success: false,
+                msg: `Failed to find Co-working id: ${req.params.id}`,
+            });
 
         res.status(200).json({
             success: true,
@@ -119,12 +117,10 @@ exports.deleteCoworking = async (req, res, next) => {
         const coworking = await Coworking.findById(req.params.id);
 
         if (!coworking)
-            return res
-                .status(404)
-                .json({
-                    success: false,
-                    msg: `Co-working not found with id of ${req.params.id}`,
-                });
+            return res.status(404).json({
+                success: false,
+                msg: `Co-working not found with id of ${req.params.id}`,
+            });
 
         await Reservation.deleteMany({ coworking: req.params.id });
         await Coworking.deleteOne({ _id: req.params.id });

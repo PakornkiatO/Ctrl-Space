@@ -41,6 +41,10 @@ const UserSchema = new mongoose.Schema({
         type: String, // This stores the LINE User ID
         required: false, // You could adjust this based on your use case
     },
+    token: {
+        type: String, // This stores the LINE access token
+        required: false, // You could adjust this based on your use case
+    },
 });
 
 UserSchema.pre("save", async function (next) {

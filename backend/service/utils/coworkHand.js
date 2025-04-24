@@ -1,21 +1,24 @@
 const { getCoworkingFlex } = require("./flexBuilder");
 const axios = require("axios");
-const { replyText, replyFlex } = require("../../utils/lineClient");
-async function handleGetCoworkings(event, client, page = 1) {
-    const limit = 5;
-    const skip = (page - 1) * limit;
-    try {
-        // Replace with your API endpoint to fetch coworking spaces
-        const response = await axios.get(`${process.env.MY_API}/coworkings`, {
-            params: {
-                skip: skip,
-                limit: limit,
-            },
-        });
+const { replyText } = require("../../utils/lineClient");
+const LIMIT = 4;
+async function fetchCoworkings(page = 1) {
+    const response = await axios.get(`${process.env.MY_API}/coworkings`, {
+        params: { page, limit: LIMIT, sort: "name" },
+    });
 
-        const coworkings = response.data.data; // Assuming the API returns a list of coworking spaces
-        const total = response.data.count; // Assuming the API provides total count of coworking spaces
-        const totalPages = Math.ceil(total / limit);
+    const coworkings = response.data.data || [];
+    // console.log("all", response.data);
+
+    const total = response.data.count || 0;
+    const totalPages = Math.ceil(total / LIMIT);
+
+    return { coworkings, totalPages };
+}
+
+async function handleCoworkingsMsg(event, client, page = 1) {
+    try {
+        const { coworkings, totalPages } = await fetchCoworkings(page);
 
         if (!coworkings.length) {
             return replyText(
@@ -36,6 +39,11 @@ async function handleGetCoworkings(event, client, page = 1) {
         );
     }
 }
+async function handleCoworkingsPostback(event, client, data) {
+    const page = parseInt(data.get("page")) || 1;
+    return handleCoworkingsMsg(event, client, page);
+}
 module.exports = {
-    handleGetCoworkings,
+    handleCoworkingsMsg,
+    handleCoworkingsPostback,
 };

@@ -3,14 +3,16 @@ const User = require("../models/User");
 
 exports.protect = async (req, res, next) => {
     let token;
-
+    const isLineRequest = req.headers["x-line-request"] === "true";
+    console.log(req.headers);
     if (
         req.headers.authorization &&
         req.headers.authorization.startsWith("Bearer")
     )
         token = req.headers.authorization.split(" ")[1];
 
-    if (!token) return res.status(401).json({ success: false, msg: "1" });
+    if (!token && !isLineRequest)
+        return res.status(401).json({ success: false, msg: "1" });
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -19,7 +21,7 @@ exports.protect = async (req, res, next) => {
 
         req.user = await User.findById(decoded.id);
 
-        next();
+        next(); // call next middleware or route handler
     } catch (err) {
         console.log(err.stack);
         res.status(401).json({ success: false, msg: "2" });

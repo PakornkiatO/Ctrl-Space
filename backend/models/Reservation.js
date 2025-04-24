@@ -31,6 +31,11 @@ const ReservationSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    status: {
+        type: String,
+        enum: ["active", "canceled", "completed", "expired"], // Add possible statuses
+        default: "active",
+    },
 });
 
 module.exports = mongoose.model("Reservation", ReservationSchema);

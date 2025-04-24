@@ -2,16 +2,17 @@ const { handleCancelReservation } = require("./utils/cancelHand");
 const { replyText } = require("../utils/lineClient");
 const { handleEditReservation } = require("./utils/editHand");
 const { startEditSession } = require("./sessionHand");
-const { handleGetCoworkings } = require("./utils/coworkHand");
+const { handleCoworkingsPostback } = require("./utils/coworkHand");
 const Reservation = require("../models/Reservation");
+const { handleCreateReservationPostback } = require("./utils/reserveHand");
 
 async function postbackHandlers(event, client) {
     const data = new URLSearchParams(event.postback.data);
     const action = data.get("action");
     const reservationId = data.get("id");
+    // const coworkingId = data.get("coworkingId");
     const lineUserId = event.source.userId;
     const replyToken = event.replyToken;
-    const page = parseInt(params.get("page")) || 1;
 
     switch (action) {
         case "edit":
@@ -26,8 +27,9 @@ async function postbackHandlers(event, client) {
                 lineUserId
             );
         case "getCoworking":
-            return handleGetCoworkings(event, client, page);
-
+            return handleCoworkingsPostback(event, client, data);
+        case "createReservation":
+            return handleCreateReservationPostback(event, client, data);
         default:
             return replyText(client, replyToken, "❓ Unknown action.");
     }

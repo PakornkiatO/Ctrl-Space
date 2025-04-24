@@ -45,6 +45,17 @@ function clearEditSession(userId) {
     clearSessionData(userId, "editReservationId");
     clearSessionStage(userId);
 }
+function setTempData(userId, data) {
+    setSessionData(userId, "temp", data);
+}
+
+function getTempData(userId) {
+    return getSessionData(userId, "temp");
+}
+
+function clearTempData(userId) {
+    clearSessionData(userId, "temp");
+}
 
 module.exports = {
     userSessions,
@@ -63,4 +74,8 @@ module.exports = {
     startEditSession,
     getEditSession,
     clearEditSession,
+
+    setTempData,
+    getTempData,
+    clearTempData,
 };
