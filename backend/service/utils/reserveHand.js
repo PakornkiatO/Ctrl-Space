@@ -4,14 +4,13 @@ const Reservation = require("../../models/Reservation");
 const { replyText } = require("../../utils/lineClient");
 const axios = require("axios");
 const Coworking = require("../../models/Coworking");
-const moment = require("moment");
+const moment = require("moment"); // Only using moment without moment-timezone
 const {
     setTempData,
     getTempData,
     clearSessionStage,
     setSessionStage,
 } = require("../sessionHand"); // ✅ Pull from sessionHand
-moment.tz.setDefault("Asia/Bangkok");
 
 async function handleViewReservation(event, client) {
     const lineUserId = event.source.userId;
@@ -32,7 +31,6 @@ async function handleViewReservation(event, client) {
         .sort({ rsDate: -1 })
         .limit(3);
 
-    // console.log(reservations);
     if (reservations.length === 0) {
         replyText(
             client,
@@ -106,16 +104,8 @@ async function handleCreateReservationMsg(event, client) {
     const date = match[1];
     const startTime = match[2];
     const endTime = match[3];
-    const start = moment.tz(
-        `${date} ${startTime}`,
-        "YYYY-MM-DD HH:mm",
-        "Asia/Bangkok"
-    );
-    const end = moment.tz(
-        `${date} ${endTime}`,
-        "YYYY-MM-DD HH:mm",
-        "Asia/Bangkok"
-    );
+    const start = moment(`${date} ${startTime}`, "YYYY-MM-DD HH:mm");
+    const end = moment(`${date} ${endTime}`, "YYYY-MM-DD HH:mm");
 
     // 🕘 Parse openingHour string like "9.00-21.00"
     const [openRaw, closeRaw] = coworking.opening_hours.split("-");
@@ -123,16 +113,8 @@ async function handleCreateReservationMsg(event, client) {
     const closeTime = closeRaw.replace(".", ":"); // e.g. "21.00" => "21:00"
 
     // 📆 Use moment to build opening and closing moments
-    const opening = moment.tz(
-        `${date} ${openTime}`,
-        "YYYY-MM-DD HH:mm",
-        "Asia/Bangkok"
-    );
-    const closing = moment.tz(
-        `${date} ${closeTime}`,
-        "YYYY-MM-DD HH:mm",
-        "Asia/Bangkok"
-    );
+    const opening = moment(`${date} ${openTime}`, "YYYY-MM-DD HH:mm");
+    const closing = moment(`${date} ${closeTime}`, "YYYY-MM-DD HH:mm");
 
     // ❌ Reject if time is outside working hours
     if (start.isBefore(opening) || end.isAfter(closing)) {
@@ -145,20 +127,11 @@ async function handleCreateReservationMsg(event, client) {
 
     // Create reservation via your API
     try {
-        // const res = await axios.post(
-        //     `${process.env.MY_API}/coworkings/${coworkingId}/reservations`,
-        //     {
-        //         start: start.toISOString(),
-        //         end: end.toISOString(),
-        //         user: user._id,
-        //         coworking: coworkingId,
-        //     }
-        // );
         // Save the reservation to the database
         const newReservation = new Reservation({
             rsDate: date,
-            startTime: start.toISOString(),
-            endTime: end.toISOString(),
+            startTime: start.toISOString(), // Store as ISO string
+            endTime: end.toISOString(), // Store as ISO string
             user: user._id,
             coworking: coworkingId,
         });

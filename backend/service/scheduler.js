@@ -1,10 +1,8 @@
-const moment = require("moment-timezone");
+const moment = require("moment");
 const Reservation = require("../models/Reservation");
 const User = require("../models/User");
 const { client } = require("../utils/lineClient");
 const cron = require("node-cron");
-
-const TIMEZONE = "Asia/Bangkok"; // change this if you use a different timezone
 
 async function notify(reservation) {
     try {
@@ -25,13 +23,8 @@ async function notify(reservation) {
 
 async function startReservationScheduler() {
     cron.schedule("* * * * *", async () => {
-        const now = moment().tz("Asia/Bangkok");
+        const now = moment(); // Use local timezone (no need for .tz)
         const in30Minutes = now.clone().add(30, "minutes");
-        console.log(
-            "⏰ Cron job triggered at:",
-            now.format("YYYY-MM-DD HH:mm:ss")
-        );
-
         try {
             const reservations = await Reservation.find({
                 startDateTime: {
@@ -44,11 +37,9 @@ async function startReservationScheduler() {
             console.log(`Found ${reservations.length} reservations to check`);
 
             for (const reservation of reservations) {
-                const startDateTime = moment(reservation.startTime).tz(
-                    "Asia/Bangkok"
-                );
+                const startDateTime = moment(reservation.startTime); // No need to use .tz here
                 console.log(
-                    `Start time (Bangkok) of reservation ${
+                    `Start time of reservation ${
                         reservation._id
                     }: ${startDateTime.format("YYYY-MM-DD HH:mm")}`
                 );
@@ -58,10 +49,6 @@ async function startReservationScheduler() {
                         `✅ Reservation ${reservation._id} is within the 30-minute window`
                     );
                     await notify(reservation);
-                } else {
-                    console.log(
-                        "❌ Reservation is not within the 30-minute window"
-                    );
                 }
             }
         } catch (err) {
@@ -69,38 +56,39 @@ async function startReservationScheduler() {
         }
     });
 }
+
 async function deleteReservationExpired() {
-    const now = moment().tz("Asia/Bangkok"); // Get current time in Bangkok timezone
-    console.log(
-        "⏰ Deleting expired reservations at:",
-        now.format("YYYY-MM-DD HH:mm:ss")
-    );
+    cron.schedule("* * * * *", async () => {
+        const now = moment(); // Use local timezone (no need for .tz)
+        try {
+            // Find reservations that have passed their end time and are not yet deleted
+            const expiredReservations = await Reservation.find({
+                endTime: {
+                    $lte: now.toDate(), // Find reservations whose end time is before now
+                },
+                status: "active", // Ensure it's not already canceled
+            });
 
-    try {
-        // Find reservations that have passed their end time and are not yet deleted
-        const expiredReservations = await Reservation.find({
-            endTime: {
-                $lte: now.toDate(), // Find reservations whose end time is before now
-            },
-            status: { $ne: "canceled" }, // Ensure it's not already canceled
-        });
+            console.log(
+                `Found ${expiredReservations.length} expired reservations to delete`
+            );
 
-        console.log(
-            `Found ${expiredReservations.length} expired reservations to delete`
-        );
+            // Loop through the expired reservations and delete them
+            for (const reservation of expiredReservations) {
+                console.log(
+                    `❌ expired reservation ${reservation._id}, endtime: ${reservation.endTime}`
+                );
 
-        // Loop through the expired reservations and delete them
-        for (const reservation of expiredReservations) {
-            console.log(`❌ Deleting expired reservation ${reservation._id}`);
-            reservation.status = "expired";
-            // await reservation.remove(); // Remove the expired reservation
-            console.log(`✅ Reservation ${reservation._id} has been deleted.`);
-            continue;
+                reservation.status = "expired";
+                await reservation.save();
+                // await reservation.remove(); // Remove the expired reservation
+            }
+        } catch (err) {
+            console.error("❌ Error deleting expired reservations:", err);
         }
-    } catch (err) {
-        console.error("❌ Error deleting expired reservations:", err);
-    }
+    });
 }
+
 module.exports = {
     startReservationScheduler,
     deleteReservationExpired,

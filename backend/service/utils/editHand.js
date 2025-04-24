@@ -1,4 +1,5 @@
 const Reservation = require("../../models/Reservation");
+const moment = require("moment"); // Make sure to include moment for proper date handling
 const { replyText } = require("../../utils/lineClient");
 const { getEditSession, clearEditSession } = require("../sessionHand"); // ✅ Now imports from sessionHand
 
@@ -33,7 +34,7 @@ async function handleEditInput(event, client) {
     if (!reservationId) return false;
 
     const match = text.match(
-        /^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})$/
+        /^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})$/ // regex for date and time
     );
 
     if (!match) {
@@ -46,11 +47,23 @@ async function handleEditInput(event, client) {
 
     const [_, date, startTime, endTime] = match;
 
+    // Parse the start and end times with moment.js and ensure they are in the correct format
+    const startDateTime = moment(
+        `${date} ${startTime}`,
+        "YYYY-MM-DD HH:mm"
+    ).toDate();
+    const endDateTime = moment(
+        `${date} ${endTime}`,
+        "YYYY-MM-DD HH:mm"
+    ).toDate();
+
     try {
+        // Update reservation with correct date and time
         await Reservation.findByIdAndUpdate(reservationId, {
-            date,
-            startTime,
-            endTime,
+            rsDate: startDateTime, // Store the reservation date correctly
+            startTime: startDateTime, // Store startTime as Date
+            endTime: endDateTime, // Store endTime as Date
+            notified: false,
         });
 
         clearEditSession(userId);

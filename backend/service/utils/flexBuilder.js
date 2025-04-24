@@ -263,15 +263,25 @@ function getCoworkingFlex(coworkings, page = 1, totalPages = 1) {
 }
 
 function viewReservationFlex(reservations) {
-    const bubbles = reservations.map((rsv) => {
-        const startFormatted = moment(rsv.startTime)
-            .tz("Asia/Bangkok")
-            .format("HH:mm");
-        const endFormatted = moment(rsv.endTime)
-            .tz("Asia/Bangkok")
-            .format("HH:mm");
+    const timeZone = "Asia/Bangkok"; // Define the timezone here
 
-        console.log(rsv.startTime, rsv.startTime);
+    // Helper function to format time in the Thai timezone
+    function formatTime(date) {
+        const options = {
+            hour: "2-digit",
+            minute: "2-digit",
+            timeZone: timeZone,
+            hour12: false, // 24-hour format
+        };
+        return new Intl.DateTimeFormat("en-US", options).format(new Date(date));
+    }
+
+    const bubbles = reservations.map((rsv) => {
+        const startFormatted = formatTime(rsv.startTime);
+        const endFormatted = formatTime(rsv.endTime);
+
+        console.log(rsv.startTime, rsv.endTime);
+
         return {
             type: "bubble",
             body: {
@@ -301,9 +311,12 @@ function viewReservationFlex(reservations) {
                         contents: [
                             {
                                 type: "text",
-                                text: `📅 ${moment(rsv.rsDate).format(
-                                    "YYYY-MM-DD"
-                                )}`,
+                                text: `📅 ${new Intl.DateTimeFormat("en-US", {
+                                    year: "numeric",
+                                    month: "2-digit",
+                                    day: "2-digit",
+                                    timeZone: timeZone,
+                                }).format(new Date(rsv.rsDate))}`,
                                 size: "sm",
                             },
                             {
