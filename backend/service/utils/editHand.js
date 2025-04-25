@@ -48,21 +48,13 @@ async function handleEditInput(event, client) {
     const [_, date, startTime, endTime] = match;
 
     // Parse the start and end times with moment.js and ensure they are in the correct format
-    const startDateTime = moment(
-        `${date} ${startTime}`,
-        "YYYY-MM-DD HH:mm"
-    ).toDate();
-    const endDateTime = moment(
-        `${date} ${endTime}`,
-        "YYYY-MM-DD HH:mm"
-    ).toDate();
 
     try {
         // Update reservation with correct date and time
         await Reservation.findByIdAndUpdate(reservationId, {
             rsDate: date, // Store the reservation date correctly
-            startTime: startDateTime, // Store startTime as Date
-            endTime: endDateTime, // Store endTime as Date
+            startTime: startTime, // Store startTime as Date
+            endTime: endTime, // Store endTime as Date
             notified: false,
         });
 

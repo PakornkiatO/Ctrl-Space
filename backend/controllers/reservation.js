@@ -74,7 +74,7 @@ exports.addReservation = async (req, res, next) => {
 
         const userReservations = await Reservation.countDocuments({
             user: userId,
-            status: { $in: ["active", "pending"] }, // adjust based on your statuses
+            status: "active", // adjust based on your statuses
         });
 
         if (userReservations >= 3) {

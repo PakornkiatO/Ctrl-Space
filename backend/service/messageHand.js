@@ -32,7 +32,7 @@ async function messageHandlers(event, client) {
         replyText(
             client,
             event.replyToken,
-            '🤖 Sorry, you are not user yet. Try "login" but it still the same though. hehehehe.'
+            "🤖 Sorry, you are not user yet. Try contact admin but it still the same though. hehehehe."
         );
     }
 

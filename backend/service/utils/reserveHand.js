@@ -25,7 +25,7 @@ async function handleViewReservation(event, client) {
 
     const reservations = await Reservation.find({
         user: user._id,
-        status: { $in: ["active", "pending"] },
+        status: "active",
     })
         .populate("coworking")
         .sort({ rsDate: -1 })
@@ -57,7 +57,7 @@ async function handleCreateReservationPostback(event, client, data) {
     const coworkingId = data.get("coworkingId");
     const activeReservations = await Reservation.countDocuments({
         user: user._id,
-        status: { $in: ["active", "pending"] }, // adjust if needed
+        status: "actives", // adjust if needed
     });
     if (activeReservations >= 3) {
         return replyText(
@@ -91,6 +91,7 @@ async function handleCreateReservationMsg(event, client) {
             "⚠️ Invalid session. Please try again."
         );
     }
+
     const coworking = await Coworking.findById(coworkingId);
     if (!coworking) {
         return replyText(
@@ -100,7 +101,6 @@ async function handleCreateReservationMsg(event, client) {
         );
     }
 
-    // Parse input format
     const match = text.match(
         /^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}) - (\d{2}:\d{2})$/
     );
@@ -111,68 +111,110 @@ async function handleCreateReservationMsg(event, client) {
             "❌ Invalid format. Please use:\nYYYY-MM-DD HH:mm - HH:mm"
         );
     }
-    const date = match[1];
-    const startTime = match[2];
-    const endTime = match[3];
-    const start = moment(`${date} ${startTime}`, "YYYY-MM-DD HH:mm");
-    const end = moment(`${date} ${endTime}`, "YYYY-MM-DD HH:mm");
 
-    // 🕘 Parse openingHour string like "9.00-21.00"
-    const [openRaw, closeRaw] = coworking.opening_hours.split("-");
-    const openTime = openRaw.replace(".", ":"); // e.g. "9.00" => "9:00"
-    const closeTime = closeRaw.replace(".", ":"); // e.g. "21.00" => "21:00"
+    const [_, dateStr, startTimeStr, endTimeStr] = match;
+    const timezone = "Asia/Bangkok";
 
-    // 📆 Use moment to build opening and closing moments
-    const opening = moment(`${date} ${openTime}`, "YYYY-MM-DD HH:mm");
-    const closing = moment(`${date} ${closeTime}`, "YYYY-MM-DD HH:mm");
-    if (date) {
-        if (date < moment().format("YYYY-MM-DD")) {
-            // ❌ Reject if date is in the past
-            return replyText(
-                client,
-                event.replyToken,
-                "⛔ Invalid date. Yak yorn vela or nong."
-            );
-        }
-        if (start.isBefore(opening) || end.isAfter(closing)) {
-            // ❌ Reject if time is outside working hours
-            return replyText(
-                client,
-                event.replyToken,
-                `⛔ Outside working hours (${openTime} - ${closeTime}).`
-            );
-        }
+    const now = moment.tz(timezone);
+    const start = moment.tz(
+        `${dateStr} ${startTimeStr}`,
+        "YYYY-MM-DD HH:mm",
+        timezone
+    );
+    const end = moment.tz(
+        `${dateStr} ${endTimeStr}`,
+        "YYYY-MM-DD HH:mm",
+        timezone
+    );
+
+    // ❌ Invalid time or end <= start
+    if (!start.isValid() || !end.isValid() || end.isSameOrBefore(start)) {
+        return replyText(client, event.replyToken, "⛔ Invalid time range.");
     }
 
-    // Create reservation via your API
+    // ❌ Can't reserve in the past (only if same day and before current time)
+    if (start.isSame(now, "day") && start.isBefore(now)) {
+        return replyText(
+            client,
+            event.replyToken,
+            "⛔ You can't reserve in the past."
+        );
+    }
+
+    // ✅ Allow future dates!
+
+    // ❌ Outside coworking hours
+    const openTime = moment.tz(
+        `${dateStr} ${coworking.open_hour}`,
+        "YYYY-MM-DD HH:mm",
+        timezone
+    );
+    const closeTime = moment.tz(
+        `${dateStr} ${coworking.close_hour}`,
+        "YYYY-MM-DD HH:mm",
+        timezone
+    );
+
+    if (start.isBefore(openTime) || end.isAfter(closeTime)) {
+        return replyText(
+            client,
+            event.replyToken,
+            `⛔ Outside working hours (${coworking.open_hour} - ${coworking.close_hour}).`
+        );
+    }
+
     try {
-        // Save the reservation to the database
         const newReservation = new Reservation({
-            rsDate: date,
-            startTime: start, // Store as ISO string
-            endTime: end, // Store as ISO string
+            rsDate: start.clone().startOf("day").toDate(),
+            startTime: start.format("HH:mm"),
+            endTime: end.format("HH:mm"),
             user: user._id,
             coworking: coworkingId,
         });
+
         await newReservation.save();
 
         await replyText(
             client,
             event.replyToken,
-            `✅ Reservation created from ${start.format(
-                "HH:mm"
-            )} to ${end.format("HH:mm")} on ${start.format("MMMM Do")}`
+            `✅ Reservation created from ${startTimeStr} to ${endTimeStr} on ${dateStr} at ${coworking.name}`
         );
+
+        clearSessionStage(lineUserId);
     } catch (err) {
-        console.error(err.response?.data || err.message);
+        console.error(err);
         return replyText(
             client,
             event.replyToken,
             "❌ Failed to create reservation."
         );
     }
+}
 
-    clearSessionStage(lineUserId);
+const timezone = "Asia/Bangkok";
+
+function isLessThan(inputTimeStr, minutes) {
+    const startMoment = getStartMoment(inputTimeStr);
+    const now = moment.tz(timezone);
+
+    const diff = startMoment.diff(now, "minutes");
+    return diff < minutes && diff >= 0;
+}
+
+function isMoreThan(inputTimeStr, minutes) {
+    const startMoment = getStartMoment(inputTimeStr);
+    const now = moment.tz(timezone);
+
+    const diff = startMoment.diff(now, "minutes");
+    return diff > minutes;
+}
+
+// 🔧 helper
+function getStartMoment(inputTimeStr) {
+    const [datePart, timeRange] = inputTimeStr.split(" ");
+    const [startTime] = timeRange.split("-");
+    const fullDateStr = `${datePart} ${startTime}`;
+    return moment.tz(fullDateStr, "YYYY/MM/DD HH:mm", timezone);
 }
 
 module.exports = {

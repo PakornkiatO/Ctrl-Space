@@ -13,7 +13,7 @@ async function notify(reservation) {
             type: "text",
             text: `🔔 Reminder: Your reservation at ${reservation.coworking.name} is in 30 minutes!`,
         });
-        reservation.status = "pending";
+        reservation.notified = true; // Mark as notified to avoid duplicate notifications
         await reservation.save();
         console.log(`✅ Notification sent to ${user.lineUserId}`);
     } catch (err) {
@@ -21,82 +21,126 @@ async function notify(reservation) {
     }
 }
 
+function buildStartDateTime(rsDate, timeStr) {
+    const dateStr = moment(rsDate).format("YYYY-MM-DD");
+    return moment.tz(
+        `${dateStr} ${timeStr}`,
+        "YYYY-MM-DD HH:mm",
+        "Asia/Bangkok"
+    );
+}
+
 async function startReservationScheduler() {
     cron.schedule("* * * * *", async () => {
-        const now = moment(); // Use local timezone (no need for .tz)
-        const in30Minutes = now.clone().add(30, "minutes");
+        console.log("🔔 Checking for reservations to notify...");
+        const now = moment.tz("Asia/Bangkok");
+        const in30Minutes = now.clone().add(31, "minutes");
+
         try {
             const reservations = await Reservation.find({
-                startDateTime: {
-                    $gte: now.toDate(),
-                    $lte: in30Minutes.toDate(),
-                },
-                status: "active", // Ensure it's not already canceled
+                notified: false,
+                status: "active",
             }).populate("coworking");
 
-            console.log(`Found ${reservations.length} reservations to check`);
-
             for (const reservation of reservations) {
-                const startDateTime = moment(reservation.startTime); // No need to use .tz here
-                console.log(
-                    `Start time of reservation ${
-                        reservation._id
-                    }: ${startDateTime.format("YYYY-MM-DD HH:mm")}`
+                const startDateTime = buildStartDateTime(
+                    reservation.rsDate,
+                    reservation.startTime
                 );
 
                 if (startDateTime.isBetween(now, in30Minutes)) {
                     console.log(
-                        `✅ Reservation ${reservation._id} is within the 30-minute window`
+                        `🔔 Notifying for reservation ${reservation._id}`
                     );
+
+                    // Call your LINE or custom notification logic
                     await notify(reservation);
+
+                    // Mark as notified
+                    reservation.notified = true;
+                    await reservation.save();
                 }
             }
         } catch (err) {
-            console.error("❌ Scheduler error:", err);
+            console.error("❌ Scheduler error:", err.message);
         }
     });
 }
-
 async function endReservationExpired() {
     cron.schedule("* * * * *", async () => {
-        const now = moment(); // Use local timezone (no need for .tz)
+        const now = moment(); // Current time
         try {
-            // Find reservations that have passed their end time and are not yet deleted
+            // Find reservations that have passed their end time and are still active
             const expiredReservations = await Reservation.find({
-                endTime: {
-                    $lte: now.toDate(), // Find reservations whose end time is before now
-                },
-                status: { $in: ["active", "pending"] }, // Ensure it's not already canceled
-            });
+                status: "active",
+                // notified: false, // Ensure it's not already notified
+            }).populate("coworking");
 
             console.log(
-                `Found ${expiredReservations.length} expired reservations`
+                `Found ${expiredReservations.length} reservations to check for expiry.`
             );
 
-            // Loop through the expired reservations and delete them
+            // Loop through the expired reservations and check if they have passed
             for (const reservation of expiredReservations) {
-                console.log(
-                    `❌ expired reservation ${reservation._id}, endtime: ${reservation.endTime}`
+                const endTimeString = reservation.endTime; // Example: "13:00"
+                const currentDate = now.format("YYYY-MM-DD"); // Current date
+
+                // Combine date with endTime to form a full datetime
+                const endDateTime = moment(
+                    `${currentDate} ${endTimeString}`,
+                    "YYYY-MM-DD HH:mm"
                 );
 
-                reservation.status = "expired";
-                await reservation.save();
-                // await reservation.remove(); // Remove the expired reservation
+                // Check if the reservation's end time has passed
+                if (endDateTime.isBefore(now)) {
+                    console.log(
+                        `❌ Expired reservation ${
+                            reservation._id
+                        }, end time: ${endDateTime.format(
+                            "YYYY-MM-DD HH:mm:ss"
+                        )}`
+                    );
+
+                    // Mark as expired
+                    reservation.status = "expired";
+                    await reservation.save();
+                    // console.log(reservation.coworking);
+                    notifyExpiration(reservation); // Notify user about expiration
+                }
             }
         } catch (err) {
-            console.error("❌ Error deleting expired reservations:", err);
+            console.error("❌ Error checking expired reservations:", err);
         }
     });
 }
+
+async function notifyExpiration(reservation) {
+    // Example of how to send notification using your LINE bot or any other system
+    try {
+        const user = await User.findById(reservation.user);
+        if (user) {
+            await client.pushMessage(user.lineUserId, {
+                type: "text",
+                text: `Your reservation at ${reservation.coworking.name} has expired.`,
+            });
+        }
+    } catch (err) {
+        console.error(
+            "❌ Error notifying user about expired reservation:",
+            err
+        );
+    }
+}
+
 async function deleteExpiredReservations() {
-    cron.schedule("*/2 * * * *", async () => {
-        const now = moment(); // Current time
+    cron.schedule("*/5 * * * *", async () => {
+        const now = moment.tz("Asia/Bangkok"); // Use local timezone (Asia/Bangkok)
 
         try {
-            // Step 1: Find expired reservations not already marked as "action" or "complete"
+            // Step 1: Find expired reservations that have been canceled or expired
             const expiredReservations = await Reservation.find({
-                endTime: { $lte: now.toDate() },
-                status: { $in: ["canceled", "expired"] },
+                endTime: { $lte: now.toDate() }, // Find reservations whose end time is before now
+                status: { $in: ["canceled", "expired"] }, // Only expired or canceled reservations
             });
 
             // Step 2: If any found, delete them

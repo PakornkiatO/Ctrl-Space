@@ -1,5 +1,5 @@
 const moment = require("moment-timezone");
-const { client } = require("../../utils/lineClient");
+const { formatDate, formatTime } = require("../../utils/lineClient");
 const { loginUrl } = require("../../utils/lineClient");
 const { getCoworking } = require("../../controllers/coworkings");
 function registrationStartFlex() {
@@ -259,7 +259,7 @@ function getCoworkingFlex(coworkings, page = 1, totalPages = 1) {
                 },
                 {
                     type: "text",
-                    text: `🕒 ${c.opening_hours || "No opening hours"}`,
+                    text: `🕒 ${c.open_hour} - ${c.close_hour}`,
                     size: "sm",
                     wrap: true,
                     margin: "sm",
@@ -315,23 +315,8 @@ function getCoworkingFlex(coworkings, page = 1, totalPages = 1) {
 function viewReservationFlex(reservations) {
     const timeZone = "Asia/Bangkok"; // Define the timezone here
 
-    // Helper function to format time in the Thai timezone
-    function formatTime(date) {
-        const options = {
-            hour: "2-digit",
-            minute: "2-digit",
-            timeZone: timeZone,
-            hour12: false, // 24-hour format
-        };
-        return new Intl.DateTimeFormat("en-US", options).format(new Date(date));
-    }
-
+    // Helper function to format time in the Thai timezoner
     const bubbles = reservations.map((rsv) => {
-        const startFormatted = formatTime(rsv.startTime);
-        const endFormatted = formatTime(rsv.endTime);
-
-        console.log(rsv.startTime, rsv.endTime);
-
         return {
             type: "bubble",
             body: {
@@ -371,7 +356,7 @@ function viewReservationFlex(reservations) {
                             },
                             {
                                 type: "text",
-                                text: `⏰ ${startFormatted} - ${endFormatted}`,
+                                text: `⏰ ${rsv.startTime} - ${rsv.endTime}`,
                                 size: "sm",
                             },
                         ],

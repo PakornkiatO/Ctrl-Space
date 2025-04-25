@@ -26,10 +26,30 @@ function replyFlex(client, token, flex) {
         contents: flex,
     });
 }
+function formatTime(dateString) {
+    return new Intl.DateTimeFormat("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "Asia/Bangkok",
+        hour12: false,
+    }).format(new Date(dateString));
+}
+
+function formatDate(dateString) {
+    return new Intl.DateTimeFormat("en-US", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        timeZone: "Asia/Bangkok",
+    }).format(new Date(dateString));
+}
+
 module.exports = {
     client,
     lineCallbackUrl,
     loginUrl,
     replyText,
     replyFlex,
+    formatTime,
+    formatDate,
 };
