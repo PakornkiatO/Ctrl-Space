@@ -65,15 +65,14 @@ exports.addReservation = async (req, res, next) => {
 
         const coworking = await Coworking.find({ _id: req.params.coworkingId });
 
-        if (!coworking)
-            return res.status(404).json({
+        if (!coworking) return res.status(404).json({
                 success: false,
                 msg: `No Co-working with the id of ${req.params.coworkingId}`,
                 data: coworking,
             });
 
         const userReservations = await Reservation.countDocuments({
-            user: userId,
+            user: req.body.user,
             status: "active", // adjust based on your statuses
         });
 

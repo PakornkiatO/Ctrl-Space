@@ -4,26 +4,26 @@ const CoworkingSchema = new mongoose.Schema(
     {
         name: {
             type: String,
-            require: [true, "Please add a name"],
+            required: [true, "Please add a name"],
             unique: true,
             trim: true,
             maxlength: [50, "Name can not be more than 50 characters"],
         },
         address: {
             type: String,
-            require: [true, "Please add an address"],
+            required: [true, "Please add an address"],
         },
         district: {
             type: String,
-            require: [true, "Please add a district"],
+            required: [true, "Please add a district"],
         },
         province: {
             type: String,
-            require: [true, "Please add a province"],
+            required: [true, "Please add a province"],
         },
         postalcode: {
             type: String,
-            require: [true, "Please add a postalcode"],
+            required: [true, "Please add a postalcode"],
             maxlength: [5, "Postal Code can not be more than 5 digits"],
         },
         tel: {
@@ -31,15 +31,15 @@ const CoworkingSchema = new mongoose.Schema(
         },
         region: {
             type: String,
-            require: [true, "Please add a region"],
+            required: [true, "Please add a region"],
         },
         open_hour: {
             type: String,
-            require: [true, "Please add a opening hours"],
+            required: [true, "Please add a opening hours"],
         },
         close_hour: {
             type: String,
-            require: [true, "Please add a opening hours"],
+            required: [true, "Please add a opening hours"],
         },
     },
     {
