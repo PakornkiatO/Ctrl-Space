@@ -14,19 +14,22 @@ dotenv.config({ path: "./config/config.env" });
             endReservationExpired,
             deleteExpiredReservations,
         } = require("./service/scheduler.js");
+
         await startReservationScheduler();
         await endReservationExpired();
         await deleteExpiredReservations();
+
         const app = express();
 
         app.use(express.json());
         app.use(cookieParser());
 
+        app.use("/api/v1/line", require("./routes/line.js"));
+
         app.use("/api/v1/coworkings", require("./routes/coworkings.js"));
         app.use("/api/v1/auth", require("./routes/auth.js"));
         app.use("/api/v1/reservations", require("./routes/reservations.js"));
-        app.use("/api/v1/line", require("./routes/line.js"));
-        console.log("API URL:", process.env.MY_API);
+        // console.log("API URL:", process.env.MY_API);
 
         const PORT = process.env.PORT || 5000;
         const server = app.listen(PORT, () => {

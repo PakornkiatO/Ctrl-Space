@@ -1,6 +1,6 @@
 const { postbackHandlers } = require("../service/postbackHand");
 const { messageHandlers } = require("../service/messageHand");
-const { client } = require("../utils/lineClient");
+const { client } = require("../utils/line");
 
 // Verify webhook setup
 exports.verifyWebhook = (req, res) => {

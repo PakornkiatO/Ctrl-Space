@@ -1,13 +1,12 @@
 const User = require("../models/User");
-const { handleLoginRequest } = require("./utils/loginHand");
-const { handleEditInput } = require("./utils/editHand");
-const { replyText } = require("../utils/lineClient");
+const { handleLoginRequest } = require("./handlers/loginHand");
+const { handleEditInput } = require("./handlers/editHand");
+const { replyText } = require("../utils/line");
 const {
-    handleTestFlex,
     handleViewReservation,
     handleCreateReservationMsg,
-} = require("./utils/reserveHand");
-const { handleCoworkingsMsg } = require("./utils/coworkHand");
+} = require("./handlers/reserveHand");
+const { handleCoworkingsMsg } = require("./handlers/coworkHand");
 const { getSessionStage } = require("./sessionHand"); // ✅ Pull from sessionHand
 
 async function messageHandlers(event, client) {
@@ -29,6 +28,7 @@ async function messageHandlers(event, client) {
         }
     }
     if (!existingUser) {
+        console.log(userId);
         replyText(
             client,
             event.replyToken,
@@ -39,10 +39,10 @@ async function messageHandlers(event, client) {
     // 👉 Command Handling
     if (text === "coworking" || text === "get coworking")
         return await handleCoworkingsMsg(event, client);
-    if (text === "logout") return handleLogout(event, client);
-    if (text === "flex") return handleTestFlex(event, client);
-    if (text === "login") return handleLoginRequest(event, client);
     if (text === "reservation") return handleViewReservation(event, client);
+    // if (text === "logout") return handleLogout(event, client);
+    // if (text === "flex") return handleTestFlex(event, client);
+    // if (text === "login") return handleLoginRequest(event, client);
 
     return replyText(
         client,

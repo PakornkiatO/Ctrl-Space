@@ -1,8 +1,9 @@
 const moment = require("moment");
 const Reservation = require("../models/Reservation");
 const User = require("../models/User");
-const { client } = require("../utils/lineClient");
+const { client } = require("../utils/line");
 const cron = require("node-cron");
+
 
 async function notify(reservation) {
     try {
@@ -20,7 +21,6 @@ async function notify(reservation) {
         console.error("❌ Error notifying user:", err);
     }
 }
-
 function buildStartDateTime(rsDate, timeStr) {
     const dateStr = moment(rsDate).format("YYYY-MM-DD");
     return moment.tz(
@@ -142,7 +142,9 @@ async function deleteExpiredReservations() {
                 endTime: { $lte: now.toDate() }, // Find reservations whose end time is before now
                 status: { $in: ["canceled", "expired"] }, // Only expired or canceled reservations
             });
-
+            console.log(
+                `Found ${expiredReservations.length} expired reservations to delete.`
+            );
             // Step 2: If any found, delete them
             if (expiredReservations.length > 0) {
                 await Reservation.deleteMany({

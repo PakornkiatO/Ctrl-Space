@@ -1,7 +1,7 @@
 const { viewReservationFlex } = require("./flexBuilder");
 const User = require("../../models/User");
 const Reservation = require("../../models/Reservation");
-const { replyText } = require("../../utils/lineClient");
+const { replyText } = require("../../utils/line");
 const axios = require("axios");
 const Coworking = require("../../models/Coworking");
 const moment = require("moment"); // Only using moment without moment-timezone
@@ -66,13 +66,11 @@ async function handleCreateReservationPostback(event, client, data) {
             "⚠️ You already have 3 active reservations. Please cancel or complete one before making a new reservation."
         );
     }
-    // Ask user to input date and time
     await replyText(
         client,
         event.replyToken,
         `📅 Please send your reservation in this format:\n\nYYYY-MM-DD HH:mm - HH:mm\nExample:\n2025-04-30 09:00 - 12:00`
     );
-    // ✅ Save stage in session (implement this in your sessionHand.js)
     setSessionStage(lineUserId, "creating_reservation");
     setTempData(lineUserId, { coworkingId });
 }
@@ -155,6 +153,10 @@ async function handleCreateReservationMsg(event, client) {
         timezone
     );
 
+    if (closeTime.isBefore(openTime)) {
+        closeTime.add(1, "day");
+    }
+
     if (start.isBefore(openTime) || end.isAfter(closeTime)) {
         return replyText(
             client,
@@ -192,30 +194,6 @@ async function handleCreateReservationMsg(event, client) {
 }
 
 const timezone = "Asia/Bangkok";
-
-function isLessThan(inputTimeStr, minutes) {
-    const startMoment = getStartMoment(inputTimeStr);
-    const now = moment.tz(timezone);
-
-    const diff = startMoment.diff(now, "minutes");
-    return diff < minutes && diff >= 0;
-}
-
-function isMoreThan(inputTimeStr, minutes) {
-    const startMoment = getStartMoment(inputTimeStr);
-    const now = moment.tz(timezone);
-
-    const diff = startMoment.diff(now, "minutes");
-    return diff > minutes;
-}
-
-// 🔧 helper
-function getStartMoment(inputTimeStr) {
-    const [datePart, timeRange] = inputTimeStr.split(" ");
-    const [startTime] = timeRange.split("-");
-    const fullDateStr = `${datePart} ${startTime}`;
-    return moment.tz(fullDateStr, "YYYY/MM/DD HH:mm", timezone);
-}
 
 module.exports = {
     handleViewReservation,

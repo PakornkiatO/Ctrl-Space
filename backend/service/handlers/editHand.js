@@ -1,6 +1,6 @@
 const Reservation = require("../../models/Reservation");
 const moment = require("moment"); // Make sure to include moment for proper date handling
-const { replyText } = require("../../utils/lineClient");
+const { replyText } = require("../../utils/line");
 const { getEditSession, clearEditSession } = require("../sessionHand"); // ✅ Now imports from sessionHand
 
 function promptTimeEdit(replyToken, client) {

@@ -6,6 +6,19 @@ const client = new Client({
 });
 // const state = crypto.randomUUID(); // or any random string generator
 
+function replyText(client, token, message) {
+    return client.replyMessage(token, {
+        type: "text",
+        text: message,
+    });
+}
+
+
+
+
+
+
+
 const lineCallbackUrl = `${process.env.MY_API}/line/callback`;
 const loginUrl = `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${
     process.env.LINELOGIN_CHANNEL_ID
@@ -13,12 +26,6 @@ const loginUrl = `https://access.line.me/oauth2/v2.1/authorize?response_type=cod
     lineCallbackUrl
 )}&state=random123&scope=profile%20openid&bot_prompt=normal`;
 
-function replyText(client, token, message) {
-    return client.replyMessage(token, {
-        type: "text",
-        text: message,
-    });
-}
 function replyFlex(client, token, flex) {
     return client.replyMessage(token, {
         type: "flex",

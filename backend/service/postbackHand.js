@@ -1,10 +1,10 @@
-const { handleCancelReservation } = require("./utils/cancelHand");
-const { replyText } = require("../utils/lineClient");
-const { handleEditReservation } = require("./utils/editHand");
+const { handleCancelReservation } = require("./handlers/cancelHand");
+const { replyText } = require("../utils/line");
+const { handleEditReservation } = require("./handlers/editHand");
 const { startEditSession } = require("./sessionHand");
-const { handleCoworkingsPostback } = require("./utils/coworkHand");
+const { handleCoworkingsPostback } = require("./handlers/coworkHand");
 const Reservation = require("../models/Reservation");
-const { handleCreateReservationPostback } = require("./utils/reserveHand");
+const { handleCreateReservationPostback } = require("./handlers/reserveHand");
 
 async function postbackHandlers(event, client) {
     const data = new URLSearchParams(event.postback.data);

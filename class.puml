@@ -1,0 +1,47 @@
+@startuml
+
+class User {
+    +String name
+    +String email
+    +String tel
+    +String password
+    +String resetPasswordToken
+    +Date resetPasswordExpire
+    +String role
+    +Date createdAt
+    +String lineUserId
+    +String token
+    +getSignedJwtToken(): String
+    +matchPassword(enteredPassword: String): Boolean
+    +totalReservations(): Integer <<virtual>>
+}
+
+class Reservation {
+    +Date rsDate
+    +String startTime
+    +String endTime
+    +ObjectId user
+    +ObjectId coworking
+    +Date createAt
+    +Boolean notified
+    +String status
+}
+
+class Coworking {
+    +String name
+    +String address
+    +String district
+    +String province
+    +String postalcode
+    +String tel
+    +String region
+    +String open_hour
+    +String close_hour
+    +reservations: Reservation[]
+    +totalReservations(): Integer <<virtual>>
+}
+
+User "1" - "0..*" Reservation : "has"
+Reservation "0..*" - "1" Coworking : "belongs to"
+
+@enduml

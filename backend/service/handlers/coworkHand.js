@@ -1,6 +1,6 @@
 const { getCoworkingFlex } = require("./flexBuilder");
 const axios = require("axios");
-const { replyText } = require("../../utils/lineClient");
+const { replyText } = require("../../utils/line");
 const LIMIT = 4;
 async function fetchCoworkings(page = 1) {
     const response = await axios.get(`${process.env.MY_API}/coworkings`, {

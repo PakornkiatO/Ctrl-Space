@@ -1,5 +1,6 @@
 const Reservation = require("../models/Reservation");
-const Coworking = require("../models/Reservation");
+const Coworking = require("../models/Coworking");
+const moment = require("moment"); // Only using moment without moment-timezone
 
 exports.getReservations = async (req, res, next) => {
     let query;
@@ -59,21 +60,23 @@ exports.getReservation = async (req, res, next) => {
     }
 };
 
+// const mongoose = require("mongoose");
 exports.addReservation = async (req, res, next) => {
     try {
         req.body.coworking = req.params.coworkingId;
 
-        const coworking = await Coworking.find({ _id: req.params.coworkingId });
-
-        if (!coworking)
+        // const coworkingId = mongoose.Types.ObjectId(req.params.coworkingId);
+        const coworking = await Coworking.findById(req.params.coworkingId);
+        if (!coworking) {
+            console.log("kuay");
             return res.status(404).json({
                 success: false,
                 msg: `No Co-working with the id of ${req.params.coworkingId}`,
                 data: coworking,
             });
-
+        }
         const userReservations = await Reservation.countDocuments({
-            user: userId,
+            user: req.user,
             status: "active", // adjust based on your statuses
         });
 
@@ -83,6 +86,12 @@ exports.addReservation = async (req, res, next) => {
                 msg: `❌ You already have 3 active reservations. Please cancel or complete one before adding more.`,
             });
         }
+        const check = checkTimeConflict(req, coworking);
+        if (!check.success)
+            return res.status(check.status).json({
+                success: false,
+                msg: check.msg,
+            });
         const reservation = await Reservation.create(req.body);
         res.status(200).json({ success: true, data: reservation });
     } catch (err) {
@@ -93,7 +102,50 @@ exports.addReservation = async (req, res, next) => {
         });
     }
 };
+function checkTimeConflict(req, coworking) {
+    const timeZone = "Asia/Bangkok";
+    const { rsDate, startTime, endTime } = req.body;
 
+    const start = moment.tz(
+        `${rsDate} ${startTime}`,
+        "YYYY-MM-DD HH:mm",
+        timeZone
+    );
+    const end = moment.tz(`${rsDate} ${endTime}`, "YYYY-MM-DD HH:mm", timeZone);
+
+    const openTime = moment.tz(
+        `${rsDate} ${coworking.open_hour}`,
+        "YYYY-MM-DD HH:mm",
+        timeZone
+    );
+    const closeTime = moment.tz(
+        `${rsDate} ${coworking.close_hour}`,
+        "YYYY-MM-DD HH:mm",
+        timeZone
+    );
+
+    if (closeTime.isBefore(openTime)) {
+        return;
+    }
+
+    if (start.isBefore(moment.tz(timeZone))) {
+        return {
+            success: false,
+            status: 400,
+            msg: `❌ Cannot reserve in the past.`,
+        };
+    }
+
+    if (start.isBefore(openTime) || end.isAfter(closeTime)) {
+        return {
+            success: false,
+            status: 400,
+            msg: `❌ Outside working hours (${coworking.open_hour} - ${coworking.close_hour}).`,
+        };
+    }
+
+    return { success: true };
+}
 exports.updateReservation = async (req, res, next) => {
     try {
         let reservation = await Reservation.findById(req.params.id);
