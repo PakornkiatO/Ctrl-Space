@@ -11,8 +11,13 @@ exports.protect = async (req, res, next) => {
     )
         token = req.headers.authorization.split(" ")[1];
 
-    if (!token && !isLineRequest)
-        return res.status(401).json({ success: false, msg: "1" });
+    if (!token || token == "null")
+        return res
+            .status(401)
+            .json({
+                success: false,
+                msg: "Not authorize to access this route",
+            });
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -24,7 +29,10 @@ exports.protect = async (req, res, next) => {
         next(); // call next middleware or route handler
     } catch (err) {
         console.log(err.stack);
-        res.status(401).json({ success: false, msg: "2" });
+        res.status(401).json({
+            success: false,
+            msg: "Not authorize to access this route",
+        });
     }
 };
 
