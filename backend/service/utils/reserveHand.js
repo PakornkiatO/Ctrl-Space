@@ -25,7 +25,7 @@ async function handleViewReservation(event, client) {
 
     const reservations = await Reservation.find({
         user: user._id,
-        status: { $eq: "active" },
+        status: { $in: ["active", "pending"] },
     })
         .populate("coworking")
         .sort({ rsDate: -1 })
@@ -55,7 +55,17 @@ async function handleCreateReservationPostback(event, client, data) {
         );
     }
     const coworkingId = data.get("coworkingId");
-
+    const activeReservations = await Reservation.countDocuments({
+        user: user._id,
+        status: { $in: ["active", "pending"] }, // adjust if needed
+    });
+    if (activeReservations >= 3) {
+        return replyText(
+            client,
+            event.replyToken,
+            "⚠️ You already have 3 active reservations. Please cancel or complete one before making a new reservation."
+        );
+    }
     // Ask user to input date and time
     await replyText(
         client,
@@ -115,14 +125,23 @@ async function handleCreateReservationMsg(event, client) {
     // 📆 Use moment to build opening and closing moments
     const opening = moment(`${date} ${openTime}`, "YYYY-MM-DD HH:mm");
     const closing = moment(`${date} ${closeTime}`, "YYYY-MM-DD HH:mm");
-
-    // ❌ Reject if time is outside working hours
-    if (start.isBefore(opening) || end.isAfter(closing)) {
-        return replyText(
-            client,
-            event.replyToken,
-            `⛔ Outside working hours (${openTime} - ${closeTime}).`
-        );
+    if (date) {
+        if (date < moment().format("YYYY-MM-DD")) {
+            // ❌ Reject if date is in the past
+            return replyText(
+                client,
+                event.replyToken,
+                "⛔ Invalid date. Yak yorn vela or nong."
+            );
+        }
+        if (start.isBefore(opening) || end.isAfter(closing)) {
+            // ❌ Reject if time is outside working hours
+            return replyText(
+                client,
+                event.replyToken,
+                `⛔ Outside working hours (${openTime} - ${closeTime}).`
+            );
+        }
     }
 
     // Create reservation via your API
@@ -130,8 +149,8 @@ async function handleCreateReservationMsg(event, client) {
         // Save the reservation to the database
         const newReservation = new Reservation({
             rsDate: date,
-            startTime: start.toISOString(), // Store as ISO string
-            endTime: end.toISOString(), // Store as ISO string
+            startTime: start, // Store as ISO string
+            endTime: end, // Store as ISO string
             user: user._id,
             coworking: coworkingId,
         });

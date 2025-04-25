@@ -20,6 +20,7 @@ exports.webhook = (req, res) => {
 
 // Handle the event based on its type (message, postback, etc.)
 async function handleEvent(event, client) {
+    console.log("Incoming event");
     if (event.type === "message") {
         console.log(`Received message event: ${event.message.text}`);
         await messageHandlers(event, client); // Handle message event

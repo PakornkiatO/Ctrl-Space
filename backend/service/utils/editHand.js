@@ -36,8 +36,8 @@ async function handleEditInput(event, client) {
     const match = text.match(
         /^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})$/ // regex for date and time
     );
-
     if (!match) {
+        clearEditSession(userId); // Clear session if format is invalid
         return replyText(
             client,
             event.replyToken,
@@ -60,7 +60,7 @@ async function handleEditInput(event, client) {
     try {
         // Update reservation with correct date and time
         await Reservation.findByIdAndUpdate(reservationId, {
-            rsDate: startDateTime, // Store the reservation date correctly
+            rsDate: date, // Store the reservation date correctly
             startTime: startDateTime, // Store startTime as Date
             endTime: endDateTime, // Store endTime as Date
             notified: false,

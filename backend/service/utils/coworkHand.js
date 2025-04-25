@@ -4,7 +4,7 @@ const { replyText } = require("../../utils/lineClient");
 const LIMIT = 4;
 async function fetchCoworkings(page = 1) {
     const response = await axios.get(`${process.env.MY_API}/coworkings`, {
-        params: { page, limit: LIMIT, sort: "name" },
+        params: { page, limit: LIMIT, sort: "province,district,address" },
     });
 
     const coworkings = response.data.data || [];

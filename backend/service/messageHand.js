@@ -13,6 +13,7 @@ const { getSessionStage } = require("./sessionHand"); // ✅ Pull from sessionHa
 async function messageHandlers(event, client) {
     const text = event.message.text.trim().toLowerCase();
     const userId = event.source.userId;
+    // console.log(userId);
     const existingUser = await User.findOne({ lineUserId: userId });
 
     const stage = getSessionStage(userId);
@@ -28,18 +29,15 @@ async function messageHandlers(event, client) {
         }
     }
     if (!existingUser) {
-        if (text !== "login") {
-            await replyText(
-                client,
-                event.replyToken,
-                "⚠️ You need to log in first. Type 'login' to start."
-            );
-            return;
-        }
+        replyText(
+            client,
+            event.replyToken,
+            '🤖 Sorry, you are not user yet. Try "login" but it still the same though. hehehehe.'
+        );
     }
 
     // 👉 Command Handling
-    if (text === "coworking spaces" || text === "get coworking")
+    if (text === "coworking" || text === "get coworking")
         return await handleCoworkingsMsg(event, client);
     if (text === "logout") return handleLogout(event, client);
     if (text === "flex") return handleTestFlex(event, client);
@@ -49,7 +47,7 @@ async function messageHandlers(event, client) {
     return replyText(
         client,
         event.replyToken,
-        "🤖 I didn't understand that. hehehe."
+        "🤖 hehehe, I didn't understand that"
     );
 }
 

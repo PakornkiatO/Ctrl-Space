@@ -11,10 +11,12 @@ dotenv.config({ path: "./config/config.env" });
 
         const {
             startReservationScheduler,
-            deleteReservationExpired,
+            endReservationExpired,
+            deleteExpiredReservations,
         } = require("./service/scheduler.js");
-        startReservationScheduler();
-        deleteReservationExpired();
+        await startReservationScheduler();
+        await endReservationExpired();
+        await deleteExpiredReservations();
         const app = express();
 
         app.use(express.json());
@@ -24,6 +26,7 @@ dotenv.config({ path: "./config/config.env" });
         app.use("/api/v1/auth", require("./routes/auth.js"));
         app.use("/api/v1/reservations", require("./routes/reservations.js"));
         app.use("/api/v1/line", require("./routes/line.js"));
+        console.log("API URL:", process.env.MY_API);
 
         const PORT = process.env.PORT || 5000;
         const server = app.listen(PORT, () => {

@@ -33,7 +33,7 @@ const ReservationSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ["active", "canceled", "completed", "expired"], // Add possible statuses
+        enum: ["active", "canceled", "pending", "expired"], // Add possible statuses
         default: "active",
     },
 });

@@ -13,7 +13,7 @@ async function notify(reservation) {
             type: "text",
             text: `🔔 Reminder: Your reservation at ${reservation.coworking.name} is in 30 minutes!`,
         });
-        reservation.notified = true;
+        reservation.status = "pending";
         await reservation.save();
         console.log(`✅ Notification sent to ${user.lineUserId}`);
     } catch (err) {
@@ -31,7 +31,7 @@ async function startReservationScheduler() {
                     $gte: now.toDate(),
                     $lte: in30Minutes.toDate(),
                 },
-                notified: false,
+                status: "active", // Ensure it's not already canceled
             }).populate("coworking");
 
             console.log(`Found ${reservations.length} reservations to check`);
@@ -57,7 +57,7 @@ async function startReservationScheduler() {
     });
 }
 
-async function deleteReservationExpired() {
+async function endReservationExpired() {
     cron.schedule("* * * * *", async () => {
         const now = moment(); // Use local timezone (no need for .tz)
         try {
@@ -66,11 +66,11 @@ async function deleteReservationExpired() {
                 endTime: {
                     $lte: now.toDate(), // Find reservations whose end time is before now
                 },
-                status: "active", // Ensure it's not already canceled
+                status: { $in: ["active", "pending"] }, // Ensure it's not already canceled
             });
 
             console.log(
-                `Found ${expiredReservations.length} expired reservations to delete`
+                `Found ${expiredReservations.length} expired reservations`
             );
 
             // Loop through the expired reservations and delete them
@@ -88,8 +88,38 @@ async function deleteReservationExpired() {
         }
     });
 }
+async function deleteExpiredReservations() {
+    cron.schedule("*/2 * * * *", async () => {
+        const now = moment(); // Current time
+
+        try {
+            // Step 1: Find expired reservations not already marked as "action" or "complete"
+            const expiredReservations = await Reservation.find({
+                endTime: { $lte: now.toDate() },
+                status: { $in: ["canceled", "expired"] },
+            });
+
+            // Step 2: If any found, delete them
+            if (expiredReservations.length > 0) {
+                await Reservation.deleteMany({
+                    _id: { $in: expiredReservations.map((r) => r._id) },
+                });
+
+                // Step 3: Log deleted reservation info
+                expiredReservations.forEach((r) => {
+                    console.log(`🗑 Deleted expired reservation: ${r._id}`);
+                });
+            } else {
+                console.log("✅ No expired reservations to delete.");
+            }
+        } catch (err) {
+            console.error("❌ Error deleting expired reservations:", err);
+        }
+    });
+}
 
 module.exports = {
     startReservationScheduler,
-    deleteReservationExpired,
+    endReservationExpired,
+    deleteExpiredReservations,
 };

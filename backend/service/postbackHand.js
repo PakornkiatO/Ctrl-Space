@@ -23,8 +23,7 @@ async function postbackHandlers(event, client) {
             return await handleCancelReservation(
                 reservationId,
                 replyToken,
-                client,
-                lineUserId
+                client
             );
         case "getCoworking":
             return handleCoworkingsPostback(event, client, data);

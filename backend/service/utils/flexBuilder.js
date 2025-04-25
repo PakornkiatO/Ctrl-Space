@@ -2,6 +2,50 @@ const moment = require("moment-timezone");
 const { client } = require("../../utils/lineClient");
 const { loginUrl } = require("../../utils/lineClient");
 const { getCoworking } = require("../../controllers/coworkings");
+function registrationStartFlex() {
+    return {
+        type: "flex",
+        altText: "Please log in to continue",
+        contents: {
+            type: "bubble",
+            direction: "ltr",
+            // hero: {
+            //     type: "image",
+            //     url: "https://example.com/your-image.png", // Optional: Add a welcoming image
+            //     size: "full",
+            //     aspectRatio: "16:9",
+            //     aspectMode: "cover",
+            // },
+            body: {
+                type: "box",
+                layout: "vertical",
+                contents: [
+                    {
+                        type: "text",
+                        text: "Welcome to the registration process!",
+                        weight: "bold",
+                        size: "lg",
+                    },
+                    {
+                        type: "text",
+                        text: "Please authenticate using your LINE account.",
+                        size: "sm",
+                        color: "#aaaaaa",
+                    },
+                    {
+                        type: "button",
+                        action: {
+                            type: "uri",
+                            label: "Login with LINE",
+                            uri: "https://your-backend-url.com/line-login", // Redirect to your backend for LINE OAuth
+                        },
+                        style: "primary",
+                    },
+                ],
+            },
+        },
+    };
+}
 
 const testFlexMessage = () => ({
     type: "bubble",
@@ -191,7 +235,6 @@ function getCoworkingFlex(coworkings, page = 1, totalPages = 1) {
         body: {
             type: "box",
             layout: "vertical",
-            // paddingAll: "5px",
             contents: [
                 {
                     type: "text",
@@ -205,12 +248,21 @@ function getCoworkingFlex(coworkings, page = 1, totalPages = 1) {
                     text: c.description || "No description",
                     size: "sm",
                     wrap: true,
+                    margin: "sm",
                 },
                 {
                     type: "text",
-                    text: `📍 ${c.location || "No location"}`,
+                    text: `📍 ${c.address || "NO address"}`,
                     size: "sm",
                     wrap: true,
+                    margin: "sm",
+                },
+                {
+                    type: "text",
+                    text: `🕒 ${c.opening_hours || "No opening hours"}`,
+                    size: "sm",
+                    wrap: true,
+                    margin: "sm",
                 },
                 {
                     type: "button",
@@ -220,7 +272,6 @@ function getCoworkingFlex(coworkings, page = 1, totalPages = 1) {
                         data: `action=createReservation&coworkingId=${c.id}`,
                         displayText: `Reserve at ${c.name}`,
                     },
-                    // paddingTop: "10px",
                     style: "primary",
                     margin: "md",
                 },
@@ -234,7 +285,6 @@ function getCoworkingFlex(coworkings, page = 1, totalPages = 1) {
             body: {
                 type: "box",
                 layout: "vertical",
-                // alignItems: "center",
                 justifyContent: "center",
                 contents: [
                     {
