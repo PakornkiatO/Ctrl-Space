@@ -10,6 +10,8 @@ async function fetchCoworkings(page = 1) {
     const coworkings = response.data.data || [];
     // console.log("all", response.data);
 
+    // console.log("kuay");
+
     const total = response.data.count || 0;
     const totalPages = Math.ceil(total / LIMIT);
 

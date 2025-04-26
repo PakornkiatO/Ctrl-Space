@@ -129,11 +129,14 @@ async function handleCreateReservationMsg(event, client) {
 
     // ❌ Invalid time or end <= start
     if (!start.isValid() || !end.isValid() || end.isSameOrBefore(start)) {
-        return replyText(client, event.replyToken, "⛔ Invalid time range.");
+        clearSessionStage(lineUserId);
+        return replyText(client, event.replyToken, "⛔ Invalid time range.");   
     }
 
     // ❌ Can't reserve in the past (only if same day and before current time)
-    if (start.isSame(now, "day") && start.isBefore(now)) {
+    // ❌ Can't reserve in the past (any day before current time)
+    if (start.isBefore(now)) {
+        clearSessionStage(lineUserId);
         return replyText(
             client,
             event.replyToken,
@@ -156,6 +159,7 @@ async function handleCreateReservationMsg(event, client) {
     );
 
     if (start.isBefore(openTime) || end.isAfter(closeTime)) {
+        clearSessionStage(lineUserId);
         return replyText(
             client,
             event.replyToken,
